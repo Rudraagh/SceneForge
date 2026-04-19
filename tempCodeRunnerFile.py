@@ -1,0 +1,1 @@
+C:/Users/arun1/omniverse-kit-venv312/Scripts/python.exe main.py "a medieval classroom with wooden desks"

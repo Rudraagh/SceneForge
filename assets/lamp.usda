@@ -1,0 +1,35 @@
+#usda 1.0
+(
+    defaultPrim = "Lamp"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "Lamp"
+{
+    def Cylinder "Pole"
+    {
+        double height = 160
+        double radius = 8
+        double3 xformOp:translate = (0, 80, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.25, 0.25, 0.25)]
+    }
+
+    def Cylinder "Base"
+    {
+        double height = 10
+        double radius = 28
+        double3 xformOp:translate = (0, 5, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.18, 0.18, 0.18)]
+    }
+
+    def Sphere "Bulb"
+    {
+        double radius = 24
+        double3 xformOp:translate = (0, 170, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(1.0, 0.95, 0.65)]
+    }
+}

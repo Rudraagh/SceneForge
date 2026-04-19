@@ -1,0 +1,26 @@
+#usda 1.0
+(
+    defaultPrim = "Torch"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "Torch"
+{
+    def Cylinder "Handle"
+    {
+        double height = 120
+        double radius = 7
+        double3 xformOp:translate = (0, 60, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.35, 0.22, 0.12)]
+    }
+
+    def Sphere "Flame"
+    {
+        double radius = 24
+        double3 xformOp:translate = (0, 132, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(1.0, 0.55, 0.08)]
+    }
+}

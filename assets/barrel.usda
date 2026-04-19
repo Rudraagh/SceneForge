@@ -1,0 +1,18 @@
+#usda 1.0
+(
+    defaultPrim = "Barrel"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "Barrel"
+{
+    def Cylinder "Body"
+    {
+        double height = 95
+        double radius = 42
+        double3 xformOp:translate = (0, 47.5, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.42, 0.26, 0.12)]
+    }
+}

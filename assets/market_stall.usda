@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    defaultPrim = "MarketStall"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "MarketStall"
+{
+    def Cube "Counter"
+    {
+        double size = 100
+        double3 xformOp:scale = (1.5, 0.22, 0.9)
+        double3 xformOp:translate = (0, 48, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        color3f[] primvars:displayColor = [(0.48, 0.30, 0.16)]
+    }
+
+    def Cube "Canopy"
+    {
+        double size = 100
+        double3 xformOp:scale = (1.7, 0.10, 1.0)
+        double3 xformOp:translate = (0, 165, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        color3f[] primvars:displayColor = [(0.78, 0.18, 0.10)]
+    }
+
+    def Cube "PostL"
+    {
+        double size = 100
+        double3 xformOp:scale = (0.08, 1.6, 0.08)
+        double3 xformOp:translate = (-68, 80, -35)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        color3f[] primvars:displayColor = [(0.28, 0.18, 0.08)]
+    }
+
+    def Cube "PostR"
+    {
+        double size = 100
+        double3 xformOp:scale = (0.08, 1.6, 0.08)
+        double3 xformOp:translate = (68, 80, -35)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        color3f[] primvars:displayColor = [(0.28, 0.18, 0.08)]
+    }
+}

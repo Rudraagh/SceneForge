@@ -1,0 +1,63 @@
+[
+  {
+    "prompt": "a medieval classroom",
+    "objects": [
+      {"name": "wooden_desk", "position": [-2.0, 0.0, 1.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "wooden_desk", "position": [2.0, 0.0, 1.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "chair", "position": [-2.0, 0.0, 2.7], "rotation": [0.0, 180.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "chair", "position": [2.0, 0.0, 2.7], "rotation": [0.0, 180.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "blackboard", "position": [0.0, 0.0, -5.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "bookshelf", "position": [-5.5, 0.0, -1.0], "rotation": [0.0, 90.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+    ]
+  },
+  {
+    "prompt": "a royal throne room with banners and torches",
+    "objects": [
+      {"name": "throne", "position": [0.0, 0.0, -4.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "banner", "position": [-4.0, 0.0, -5.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "banner", "position": [4.0, 0.0, -5.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "torch", "position": [-5.5, 0.0, -2.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "torch", "position": [5.5, 0.0, -2.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "bench", "position": [-2.5, 0.0, 2.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "bench", "position": [2.5, 0.0, 2.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+    ]
+  },
+  {
+    "prompt": "a forest camp with trees, crates and a campfire",
+    "objects": [
+      {"name": "campfire", "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "pine_tree", "position": [-5.5, 0.0, -4.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "pine_tree", "position": [5.5, 0.0, -4.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "pine_tree", "position": [-6.0, 0.0, 4.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "barrel", "position": [-2.5, 0.0, 2.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "crate", "position": [3.5, 0.0, -1.5], "rotation": [0.0, 18.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "bench", "position": [-2.8, 0.0, 0.0], "rotation": [0.0, 90.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+    ]
+  },
+  {
+    "prompt": "a medieval market with vendor stalls and barrels",
+    "objects": [
+      {"name": "market_stall", "position": [-3.5, 0.0, -1.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "market_stall", "position": [3.5, 0.0, -1.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "crate", "position": [-2.0, 0.0, 2.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "crate", "position": [2.0, 0.0, 2.5], "rotation": [0.0, 12.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "barrel", "position": [-4.5, 0.0, 2.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "barrel", "position": [4.5, 0.0, 2.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "lamp", "position": [0.0, 0.0, 4.8], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+    ]
+  },
+  {
+    "prompt": "the solar system with the sun and planets in order",
+    "objects": [
+      {"name": "sun", "position": [-10.8, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "mercury", "position": [-8.4, 0.0, 0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "venus", "position": [-6.4, 0.0, -0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "earth", "position": [-4.2, 0.0, 0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "mars", "position": [-2.0, 0.0, -0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "jupiter", "position": [1.2, 0.0, 0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "saturn", "position": [4.7, 0.0, -0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "uranus", "position": [8.1, 0.0, 0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+      {"name": "neptune", "position": [11.1, 0.0, -0.2], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]}
+    ]
+  }
+]

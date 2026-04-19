@@ -1,0 +1,377 @@
+{
+  "banner": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\2440d24c883c46a4a6c21e3cb1b6f323.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-097\\2440d24c883c46a4a6c21e3cb1b6f323.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:banner:2440d24c883c46a4a6c21e3cb1b6f323",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776551258,
+    "quality_score": 0.5337,
+    "normalized_size": [
+      0.6213424396281905,
+      0.24480893587932562,
+      0.08
+    ],
+    "original_size": [
+      2.0,
+      0.7880000472068787,
+      0.25750695557789927
+    ],
+    "scale_factor": 0.31067121981409523,
+    "face_count": 20460
+  },
+  "torch": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\02ab281f551a402ca72bda6531d26430.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-000\\02ab281f551a402ca72bda6531d26430.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:lantern:02ab281f551a402ca72bda6531d26430",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776551261,
+    "quality_score": 0.5495,
+    "normalized_size": [
+      0.22,
+      0.39028150811291235,
+      0.16874049937658572
+    ],
+    "original_size": [
+      0.11984270759945494,
+      0.2126017848102275,
+      0.0919196287589735
+    ],
+    "scale_factor": 1.835739565692194,
+    "face_count": 147738
+  },
+  "table": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\0865d008b68f4776a8d2ce34ce198fb0.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-090\\0865d008b68f4776a8d2ce34ce198fb0.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:table:0865d008b68f4776a8d2ce34ce198fb0",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776552062,
+    "quality_score": 0.6652,
+    "normalized_size": [
+      0.8,
+      0.5871579948751589,
+      0.8
+    ],
+    "original_size": [
+      0.7470990419387817,
+      0.5483314692974091,
+      0.7470990419387817
+    ],
+    "scale_factor": 1.0708084940437563,
+    "face_count": 1026
+  },
+  "chair": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\0124889ae0b740f6ab55c65650109e11.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-000\\0124889ae0b740f6ab55c65650109e11.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:chair:0124889ae0b740f6ab55c65650109e11",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776582883,
+    "quality_score": 0.5898,
+    "normalized_size": [
+      0.48040548023912993,
+      0.95,
+      0.4761876370207882
+    ],
+    "original_size": [
+      1.236369013786316,
+      2.444914996623993,
+      1.2255139946937554
+    ],
+    "scale_factor": 0.3885615660715348,
+    "face_count": 16556
+  },
+  "lamp": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\01c53767c1f84f55ad9f46eb89949cf9.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-000\\01c53767c1f84f55ad9f46eb89949cf9.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:lamp:01c53767c1f84f55ad9f46eb89949cf9",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776582891,
+    "quality_score": 0.6646,
+    "normalized_size": [
+      0.18956475073071005,
+      1.2,
+      0.2177055260042766
+    ],
+    "original_size": [
+      0.5422859787940979,
+      3.432827949523926,
+      0.6227880120277405
+    ],
+    "scale_factor": 0.34956601893387035,
+    "face_count": 26268
+  },
+  "sun": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\sun\\sun.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\sun\\sun.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:sun",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      2.4,
+      2.4,
+      2.4
+    ],
+    "original_size": [
+      2.4,
+      2.4,
+      2.4
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "mercury": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\mercury\\mercury.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\mercury\\mercury.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:mercury",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.35,
+      0.35,
+      0.35
+    ],
+    "original_size": [
+      0.35,
+      0.35,
+      0.35
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "venus": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\venus\\venus.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\venus\\venus.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:venus",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.52,
+      0.52,
+      0.52
+    ],
+    "original_size": [
+      0.52,
+      0.52,
+      0.52
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "earth": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\earth\\earth.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\earth\\earth.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:earth",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.56,
+      0.56,
+      0.56
+    ],
+    "original_size": [
+      0.56,
+      0.56,
+      0.56
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "mars": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\mars\\mars.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\mars\\mars.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:mars",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.4,
+      0.4,
+      0.4
+    ],
+    "original_size": [
+      0.4,
+      0.4,
+      0.4
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "jupiter": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\jupiter\\jupiter.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\jupiter\\jupiter.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:jupiter",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      1.35,
+      1.35,
+      1.35
+    ],
+    "original_size": [
+      1.35,
+      1.35,
+      1.35
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "saturn": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\saturn\\saturn.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\saturn\\saturn.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:saturn",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      1.15,
+      1.15,
+      1.15
+    ],
+    "original_size": [
+      1.15,
+      1.15,
+      1.15
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "uranus": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\uranus\\uranus.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\uranus\\uranus.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:uranus",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.82,
+      0.82,
+      0.82
+    ],
+    "original_size": [
+      0.82,
+      0.82,
+      0.82
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "neptune": {
+    "asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\neptune\\neptune.procedural.usda",
+    "source_asset_path": "C:\\Users\\arun1\\AppData\\Local\\Temp\\scene_asset_cache\\neptune\\neptune.jpg",
+    "prim_path": "/Root",
+    "source": "planet-texture:neptune",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776553745,
+    "quality_score": 1.0,
+    "normalized_size": [
+      0.8,
+      0.8,
+      0.8
+    ],
+    "original_size": [
+      0.8,
+      0.8,
+      0.8
+    ],
+    "scale_factor": 1.0,
+    "face_count": 4096
+  },
+  "wooden_desk": {
+    "asset_path": "C:\\Users\\arun1\\OneDrive\\\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\\New project\\external_asset_cache\\objaverse_candidates\\07dd49275fc84617b5c6d3bd6a7d30a1.normalized.usda",
+    "source_asset_path": "C:\\Users\\arun1\\.objaverse\\hf-objaverse-v1\\glbs\\000-079\\07dd49275fc84617b5c6d3bd6a7d30a1.glb",
+    "prim_path": "/Root",
+    "source": "objaverse:desk:07dd49275fc84617b5c6d3bd6a7d30a1",
+    "rotation_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "last_used_ts": 1776582883,
+    "quality_score": 0.6344,
+    "normalized_size": [
+      0.8839804674638992,
+      0.7125089529668615,
+      0.7
+    ],
+    "original_size": [
+      1.7970818147475227,
+      1.4484900168609622,
+      1.4230600297451022
+    ],
+    "scale_factor": 0.4918977312049047,
+    "face_count": 3292
+  }
+}

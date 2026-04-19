@@ -1,0 +1,37 @@
+#usda 1.0
+(
+    defaultPrim = "Campfire"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "Campfire"
+{
+    def Cylinder "LogA"
+    {
+        double height = 90
+        double radius = 10
+        float3 xformOp:rotateXYZ = (0, 0, 90)
+        double3 xformOp:translate = (0, 12, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        color3f[] primvars:displayColor = [(0.35, 0.20, 0.10)]
+    }
+
+    def Cylinder "LogB"
+    {
+        double height = 90
+        double radius = 10
+        float3 xformOp:rotateXYZ = (0, 90, 0)
+        double3 xformOp:translate = (0, 12, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        color3f[] primvars:displayColor = [(0.35, 0.20, 0.10)]
+    }
+
+    def Sphere "Flame"
+    {
+        double radius = 28
+        double3 xformOp:translate = (0, 38, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(1.0, 0.48, 0.05)]
+    }
+}

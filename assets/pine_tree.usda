@@ -1,0 +1,27 @@
+#usda 1.0
+(
+    defaultPrim = "PineTree"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "PineTree"
+{
+    def Cylinder "Trunk"
+    {
+        double height = 180
+        double radius = 14
+        double3 xformOp:translate = (0, 90, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.36, 0.20, 0.10)]
+    }
+
+    def Cone "Canopy"
+    {
+        double height = 260
+        double radius = 95
+        double3 xformOp:translate = (0, 220, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        color3f[] primvars:displayColor = [(0.10, 0.32, 0.12)]
+    }
+}
