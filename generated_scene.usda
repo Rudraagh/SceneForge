@@ -1,0 +1,458 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 0.01
+    upAxis = "Y"
+)
+
+def Xform "World"
+{
+    def Xform "Room"
+    {
+        def Cube "Ground"
+        {
+            color3f[] primvars:displayColor = [(0.55, 0.55, 0.55)]
+            double size = 1
+            float3 xformOp:scale = (15.044, 0.1, 14.927)
+            double3 xformOp:translate = (0, -0.05, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "WallNorth"
+        {
+            color3f[] primvars:displayColor = [(0.88, 0.88, 0.9)]
+            double size = 1
+            float3 xformOp:scale = (15.044, 3, 0.1)
+            double3 xformOp:translate = (0, 1.5, -7.4635)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "WallSouth"
+        {
+            color3f[] primvars:displayColor = [(0.88, 0.88, 0.9)]
+            double size = 1
+            float3 xformOp:scale = (15.044, 3, 0.1)
+            double3 xformOp:translate = (0, 1.5, 7.4635)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "WallWest"
+        {
+            color3f[] primvars:displayColor = [(0.9, 0.9, 0.92)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 3, 14.927)
+            double3 xformOp:translate = (-7.522, 1.5, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "WallEast"
+        {
+            color3f[] primvars:displayColor = [(0.9, 0.9, 0.92)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 3, 14.927)
+            double3 xformOp:translate = (7.522, 1.5, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    def Xform "blackboard_1"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-0.13, 0.02, -5.06)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\blackboard.usda@</Blackboard>
+        )
+        {
+            float3 xformOp:scale = (0.00585366, 0.00585366, 0.00585366)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_1"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, -2.83)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_2"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, -2.83)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_3"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, -2.83)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_4"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, -2.83)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_1"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, -1.89)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_2"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, -1.89)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_3"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, -1.89)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_4"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, -1.89)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_5"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, -0.952)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_6"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, -0.952)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_7"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, -0.952)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_8"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, -0.952)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_5"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, -0.012)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_6"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, -0.012)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_7"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, -0.012)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_8"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, -0.012)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_9"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, 0.928)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_10"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, 0.928)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_11"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, 0.928)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "wooden_desk_12"
+    {
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, 0.928)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\assets\desk.usda@</Desk>
+        )
+        {
+            float3 xformOp:scale = (0.00875, 0.00875, 0.00875)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_9"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-3.416, 0.02, 1.867)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_10"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-1.068, 0.02, 1.867)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_11"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (1.28, 0.02, 1.867)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+
+    def Xform "chair_12"
+    {
+        float3 xformOp:rotateXYZ = (0, 180, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (3.628, 0.02, 1.867)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+        def Xform "Asset" (
+            prepend references = @C:\Users\arun1\OneDrive\ドキュメント\SceneForge\external_asset_cache\chair\SheenChair.normalized.usda@</Root>
+        )
+        {
+            float3 xformOp:scale = (0.5538462, 0.5538462, 0.5538462)
+            uniform token[] xformOpOrder = ["xformOp:scale"]
+        }
+    }
+}
+
