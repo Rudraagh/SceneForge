@@ -384,6 +384,31 @@ def generate_scene(prompt: str, mode: str = "ai") -> List[Dict]:
         print(f"[DEBUG] Scene graph: {json.dumps(scene)}")
         return scene
 
+def build_graph(scene_objects, relations):
+    graph = {
+        "nodes": [],
+        "edges": []
+    }
+
+    name_to_obj = {}
+
+    # Add nodes
+    for obj in scene_objects:
+        graph["nodes"].append(obj)
+        name_to_obj[obj["name"]] = obj
+
+    # Add edges
+    for (obj1, rel, obj2) in relations:
+        if obj1 in name_to_obj and obj2 in name_to_obj:
+            graph["edges"].append({
+                "from": obj1,
+                "relation": rel,
+                "to": obj2
+            })
+
+    graph["lookup"] = name_to_obj
+
+    return graph
 
 def training_stub() -> Dict[str, str]:
     """

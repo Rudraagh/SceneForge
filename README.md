@@ -137,7 +137,7 @@ Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, and `stall` are ca
 - `direct_usd_scene.py`
   - primary USD builder used by `main.py`
   - authors a scene in memory with Pixar USD APIs
-  - supports `--mode=ai`, `--mode=rule`, and blueprint mode with `-b`
+  - supports `--mode`, blueprint mode, output paths, help, and asset-source flags
   - applies room shells, assets, transforms, scaling, and export
 
 - `run_omniverse_scene.py`
@@ -220,7 +220,7 @@ Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, and `stall` are ca
 - `objaverse_loader.py`
   - central asset resolver
   - defines target sizes and retrieval specs per object type
-  - checks fresh cached normalized assets first
+  - supports per-object and CLI-driven source order
   - optionally searches Objaverse candidates
   - downloads curated free-source assets for some categories
   - normalizes meshes so pivots and scale are stable
@@ -329,6 +329,15 @@ Note:
 C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe main.py "a medieval classroom with wooden desks and a blackboard"
 ```
 
+### Show CLI help
+
+All main entry points support `-h`, `--help`, and `-help`.
+
+```powershell
+C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe main.py -help
+C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe direct_usd_scene.py -help
+```
+
 ### Force AI scene generation
 
 ```powershell
@@ -349,6 +358,26 @@ This uses `blueprint.png` as the dominant placement source.
 C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe direct_usd_scene.py -b "a classroom with desks and chairs"
 ```
 
+### Control asset retrieval
+
+Use these flags from `main.py`, `direct_usd_scene.py`, or `run_omniverse_scene.py`.
+
+```powershell
+C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe main.py --mode=rule --prefer-local-assets --disable-objaverse "a classroom with wooden desks and chairs"
+```
+
+Useful flags:
+
+- `--prefer-local-assets`
+- `--asset-source-order local,free,cache,objaverse,procedural`
+- `--disable-cache`
+- `--disable-objaverse`
+- `--disable-free`
+- `--disable-procedural`
+- `--objaverse-candidate-limit 10`
+- `--objaverse-min-score 0.7`
+- `-o output.usda` or `--output output.usda`
+
 ### Run the Omniverse Kit backend directly
 
 ```powershell
@@ -364,10 +393,13 @@ streamlit run app.py
 UI flow:
 
 1. Upload a blueprint image
-2. Enter a prompt
-3. Click `Generate Scene`
-4. Review logs, metrics, and explanation output
-5. Open `generated_scene.usda` in Blender from the UI if Blender is installed at the configured path
+2. Choose whether to use blueprint placement
+3. Enter a prompt
+4. Choose `ai` or `rule` mode
+5. Mark asset flags such as local preference, Objaverse disable, cache disable, free-source disable, procedural disable, candidate limit, and minimum score
+6. Click `Generate Scene`
+7. Review logs, metrics, explanation output, and the exported USD path
+8. Open the USD in Blender from the UI if Blender is installed at the configured path
 
 ## Environment Variables
 
@@ -401,6 +433,21 @@ UI flow:
 
 - `OBJAVERSE_MIN_SCORE`
   - quality threshold for accepting Objaverse matches
+
+- `SCENE_ASSET_SOURCE_ORDER`
+  - comma-separated source order, for example `local,free,cache,objaverse,procedural`
+
+- `SCENE_DISABLE_CACHE`
+  - set to `1` to skip cached normalized assets
+
+- `SCENE_DISABLE_OBJAVERSE`
+  - set to `1` to skip Objaverse
+
+- `SCENE_DISABLE_FREE`
+  - set to `1` to skip curated free downloads
+
+- `SCENE_DISABLE_PROCEDURAL`
+  - set to `1` to skip procedural fallback assets
 
 - `OMNI_KIT_ACCEPT_EULA`
   - set automatically in `run_omniverse_scene.py`
@@ -440,13 +487,15 @@ For the pure Python/UI side, `requirements.txt` now covers the common packages u
 
 ## Notes On Asset Resolution
 
-For each object, SceneForge tries to find the best asset in this order:
+For each object, SceneForge tries to find the best asset using per-object source order. Classroom staples such as desks, tables, chairs, and lamps now prefer the local USDA library first so vague Objaverse names do not become office benches or street lamps.
 
-1. fresh normalized cached asset
-2. procedural planet asset if the object is a planet
-3. Objaverse candidate search
-4. curated free-source download
-5. local USDA fallback in `assets/`
+You can override source order with CLI/UI flags:
+
+1. `cache`
+2. `objaverse`
+3. `free`
+4. `local`
+5. `procedural`
 
 If no asset is available, the scene builder creates placeholder geometry so export can still succeed.
 
@@ -477,7 +526,7 @@ If you want better blueprint coverage, expand `DEFAULT_COLOR_MAP` and reduce the
 - Objaverse retrieval only works when the package and local setup are available
 - some external asset downloads require internet access
 - flattened USDA export can still be sensitive to Windows path quirks
-- the Streamlit UI assumes `python` resolves to a usable interpreter for the pipeline subprocess
+- the Streamlit UI resolves the pipeline interpreter from `SCENEFORGE_PYTHON`, the preferred Omniverse USD Python path, or the current Python executable
 - the Blender button assumes Blender is installed at `C:\Program Files\Blender Foundation\Blender 4.0\blender.exe`
 - no automated tests are currently included
 

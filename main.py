@@ -12,6 +12,7 @@ Run from this project folder:
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -61,9 +62,28 @@ def check_ollama_model() -> None:
         )
 
 
-def run_scene_builder(prompt: str, mode: str) -> int:
+def run_scene_builder(args: argparse.Namespace, prompt: str) -> int:
     """Run the scene build entry point."""
-    command = [sys.executable, str(PROJECT_ROOT / "direct_usd_scene.py"), f"--mode={mode}", prompt]
+    command = [sys.executable, str(PROJECT_ROOT / "direct_usd_scene.py"), "--mode", args.mode, "--output", args.output]
+    if args.blueprint:
+        command.extend(["--blueprint", "--blueprint-path", args.blueprint_path])
+    if args.asset_source_order:
+        command.extend(["--asset-source-order", args.asset_source_order])
+    if args.prefer_local_assets:
+        command.append("--prefer-local-assets")
+    if args.disable_cache:
+        command.append("--disable-cache")
+    if args.disable_objaverse:
+        command.append("--disable-objaverse")
+    if args.disable_free:
+        command.append("--disable-free")
+    if args.disable_procedural:
+        command.append("--disable-procedural")
+    if args.objaverse_candidate_limit is not None:
+        command.extend(["--objaverse-candidate-limit", str(args.objaverse_candidate_limit)])
+    if args.objaverse_min_score is not None:
+        command.extend(["--objaverse-min-score", str(args.objaverse_min_score)])
+    command.append(prompt)
     completed = subprocess.run(command, cwd=PROJECT_ROOT, check=False)
     return completed.returncode
 
@@ -95,33 +115,61 @@ def export_flattened_scene(scene_path: Path) -> Path:
     return flattened_path
 
 
-def main() -> int:
-    mode = "ai"
-    filtered_args = []
-    for arg in sys.argv[1:]:
-        if arg.startswith("--mode="):
-            mode = arg.split("=", 1)[1].strip() or "ai"
-        else:
-            filtered_args.append(arg)
-    prompt = " ".join(filtered_args).strip() or DEFAULT_PROMPT
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="SceneForge CLI: generate a USD scene from a prompt.",
+    )
+    parser.add_argument("-help", action="help", help=argparse.SUPPRESS)
+    parser.add_argument("prompt", nargs="*", help="Scene prompt.")
+    parser.add_argument("--mode", choices=["ai", "rule"], default="ai", help="Scene graph generation mode.")
+    parser.add_argument("-b", "--blueprint", action="store_true", help="Use a blueprint image for placement.")
+    parser.add_argument("--blueprint-path", default="blueprint.png", help="Blueprint image path.")
+    parser.add_argument("-o", "--output", default="generated_scene.usda", help="Output USDA path.")
+    parser.add_argument("--skip-ollama-check", action="store_true", help="Do not validate Ollama before running.")
+    parser.add_argument("--no-viewer", action="store_true", help="Do not open the local previewer after export.")
+    parser.add_argument(
+        "--asset-source-order",
+        help="Comma-separated source order using cache,objaverse,free,local,procedural.",
+    )
+    parser.add_argument("--prefer-local-assets", action="store_true", help="Prefer local assets before external sources.")
+    parser.add_argument("--disable-cache", action="store_true", help="Do not reuse normalized cache entries.")
+    parser.add_argument("--disable-objaverse", action="store_true", help="Skip Objaverse search/download.")
+    parser.add_argument("--disable-free", action="store_true", help="Skip curated free-source downloads.")
+    parser.add_argument("--disable-procedural", action="store_true", help="Skip procedural fallback assets.")
+    parser.add_argument("--objaverse-candidate-limit", type=int, help="Objaverse candidates to inspect per category.")
+    parser.add_argument("--objaverse-min-score", type=float, help="Minimum Objaverse quality score.")
+    return parser.parse_args()
 
-    try:
-        check_ollama_server()
-        check_ollama_model()
-    except RuntimeError as exc:
-        print(f"[ERROR] {exc}")
-        return 1
+
+def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+    args = parse_args()
+    prompt = " ".join(args.prompt).strip() or DEFAULT_PROMPT
+
+    if args.mode == "ai" and not args.skip_ollama_check:
+        try:
+            check_ollama_server()
+            check_ollama_model()
+        except RuntimeError as exc:
+            print(f"[ERROR] {exc}")
+            return 1
 
     print(f"[INFO] Using Ollama model: {OLLAMA_MODEL}")
-    print(f"[INFO] Scene generation mode: {mode}")
+    print(f"[INFO] Scene generation mode: {args.mode}")
     print(f"[INFO] Prompt: {prompt}")
 
-    return_code = run_scene_builder(prompt, mode)
+    return_code = run_scene_builder(args, prompt)
     if return_code != 0:
         print(f"[ERROR] Scene builder exited with code {return_code}")
         return return_code
 
-    output_path = PROJECT_ROOT / "generated_scene.usda"
+    output_path = Path(args.output)
+    if not output_path.is_absolute():
+        output_path = PROJECT_ROOT / output_path
     print(f"[INFO] Scene generation finished successfully.")
     print(f"[INFO] Output file name: {output_path.name}")
     try:
@@ -129,7 +177,8 @@ def main() -> int:
         print(f"[INFO] Flattened file name: {flattened_path.name}")
     except Exception:
         print("[WARN] Flattened export skipped because USD could not safely write the flattened file in this directory.")
-    launch_viewer(output_path)
+    if not args.no_viewer:
+        launch_viewer(output_path)
     return 0
 
 

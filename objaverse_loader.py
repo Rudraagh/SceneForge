@@ -25,11 +25,13 @@ import re
 import tempfile
 import time
 import urllib.request
+import hashlib
 from difflib import get_close_matches
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import trimesh
+from PIL import Image, ImageDraw
 from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
 
 
@@ -41,9 +43,51 @@ CACHE_INDEX_PATH = EXTERNAL_CACHE_DIR / "cache_index.json"
 DEFAULT_CACHE_TTL_HOURS = int(os.getenv("SCENE_ASSET_CACHE_TTL_HOURS", "168"))
 OBJAVERSE_CANDIDATE_LIMIT = int(os.getenv("OBJAVERSE_CANDIDATE_LIMIT", "5"))
 MIN_OBJAVERSE_SCORE = float(os.getenv("OBJAVERSE_MIN_SCORE", "0.45"))
+ENABLE_PROCEDURAL_FALLBACK = os.getenv("SCENE_ENABLE_PROCEDURAL_FALLBACK", "1") != "0"
+ASSET_SOURCE_NAMES = {"cache", "objaverse", "free", "local", "procedural"}
 
 
 OBJECT_SPECS: Dict[str, Dict[str, object]] = {
+    "bed": {
+        "target_size": [2.10, 0.85, 3.00],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.45,
+        "objaverse_categories": ["bed"],
+        "free_sources": [],
+        "local_fallback": {},
+    },
+    "nightstand": {
+        "target_size": [0.70, 0.75, 0.55],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.45,
+        "objaverse_categories": ["nightstand", "cabinet", "table"],
+        "free_sources": [],
+        "local_fallback": {},
+    },
+    "wardrobe": {
+        "target_size": [1.30, 2.25, 0.65],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.45,
+        "objaverse_categories": ["wardrobe", "cabinet", "closet"],
+        "free_sources": [],
+        "local_fallback": {},
+    },
+    "pillow": {
+        "target_size": [0.75, 0.22, 0.48],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.40,
+        "objaverse_categories": ["pillow", "cushion"],
+        "free_sources": [],
+        "local_fallback": {},
+    },
+    "blanket": {
+        "target_size": [1.85, 0.12, 1.80],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.40,
+        "objaverse_categories": ["blanket", "quilt", "cloth"],
+        "free_sources": [],
+        "local_fallback": {},
+    },
     "sun": {
         "target_size": [2.40, 2.40, 2.40],
         "rotation_offset": [0.0, 0.0, 0.0],
@@ -120,6 +164,7 @@ OBJECT_SPECS: Dict[str, Dict[str, object]] = {
         "target_size": [1.45, 0.80, 0.70],
         "rotation_offset": [0.0, 0.0, 0.0],
         "min_score": 0.55,
+        "source_order": ["local", "objaverse", "procedural"],
         "objaverse_categories": ["desk", "table"],
         "free_sources": [],
         "local_fallback": {"asset_path": str(LOCAL_ASSET_ROOT / "desk.usda"), "prim_path": "/Desk"},
@@ -128,6 +173,7 @@ OBJECT_SPECS: Dict[str, Dict[str, object]] = {
         "target_size": [1.40, 0.82, 0.80],
         "rotation_offset": [0.0, 0.0, 0.0],
         "min_score": 0.55,
+        "source_order": ["local", "objaverse", "procedural"],
         "objaverse_categories": ["table", "desk"],
         "free_sources": [],
         "local_fallback": {"asset_path": str(LOCAL_ASSET_ROOT / "table.usda"), "prim_path": "/Table"},
@@ -136,6 +182,7 @@ OBJECT_SPECS: Dict[str, Dict[str, object]] = {
         "target_size": [0.65, 0.95, 0.65],
         "rotation_offset": [0.0, 0.0, 0.0],
         "min_score": 0.55,
+        "source_order": ["local", "free", "objaverse", "procedural"],
         "objaverse_categories": ["chair", "seat"],
         "free_sources": [
             {
@@ -158,6 +205,7 @@ OBJECT_SPECS: Dict[str, Dict[str, object]] = {
         "target_size": [0.45, 1.20, 0.45],
         "rotation_offset": [0.0, 0.0, 0.0],
         "min_score": 0.50,
+        "source_order": ["local", "free", "objaverse", "procedural"],
         "objaverse_categories": ["lamp", "lantern"],
         "free_sources": [
             {
@@ -254,6 +302,15 @@ OBJECT_SPECS: Dict[str, Dict[str, object]] = {
         "free_sources": [],
         "local_fallback": {"asset_path": str(LOCAL_ASSET_ROOT / "market_stall.usda"), "prim_path": "/MarketStall"},
     },
+    "clock": {
+        "target_size": [1.20, 1.20, 0.20],
+        "rotation_offset": [0.0, 0.0, 0.0],
+        "min_score": 0.45,
+        "objaverse_categories": ["clock", "wall clock"],
+        "free_sources": [],
+        "fallback_color": [0.92, 0.88, 0.72],
+        "local_fallback": {},
+    },
 }
 
 
@@ -270,6 +327,17 @@ def canonicalize_object_name(name: str) -> str:
         "tree": "pine_tree",
         "fire": "campfire",
         "camp_fire": "campfire",
+        "bed_room": "bedroom",
+        "bedside_table": "nightstand",
+        "bedside_stand": "nightstand",
+        "night_stand": "nightstand",
+        "closet": "wardrobe",
+        "duvet": "blanket",
+        "quilt": "blanket",
+        "cushion": "pillow",
+        "clocks": "clock",
+        "wall_clock": "clock",
+        "grandfather_clock": "clock",
         "sol": "sun",
     }
     return synonyms.get(key, key)
@@ -283,11 +351,25 @@ def _spec_for(object_name: str) -> Dict[str, object]:
     return {
         "target_size": [1.0, 1.0, 1.0],
         "rotation_offset": [0.0, 0.0, 0.0],
-        "min_score": MIN_OBJAVERSE_SCORE,
+        "min_score": _min_objaverse_score(),
         "objaverse_categories": [canonical],
         "free_sources": [],
         "local_fallback": {},
     }
+
+
+def _objaverse_candidate_limit() -> int:
+    try:
+        return max(1, int(os.getenv("OBJAVERSE_CANDIDATE_LIMIT", str(OBJAVERSE_CANDIDATE_LIMIT))))
+    except ValueError:
+        return OBJAVERSE_CANDIDATE_LIMIT
+
+
+def _min_objaverse_score() -> float:
+    try:
+        return float(os.getenv("OBJAVERSE_MIN_SCORE", str(MIN_OBJAVERSE_SCORE)))
+    except ValueError:
+        return MIN_OBJAVERSE_SCORE
 
 
 def _local_asset_map() -> Dict[str, Dict[str, object]]:
@@ -298,6 +380,44 @@ def _local_asset_map() -> Dict[str, Dict[str, object]]:
             fallback["rotation_offset"] = list(spec.get("rotation_offset", [0.0, 0.0, 0.0]))
             local_map[name] = fallback
     return local_map
+
+
+def _local_fallback_asset(object_name: str) -> Optional[Dict[str, object]]:
+    local = _local_asset_map().get(canonicalize_object_name(object_name))
+    if local and Path(str(local.get("asset_path", ""))).exists():
+        return local
+    return None
+
+
+def _source_order_for(object_name: str) -> List[str]:
+    override = os.getenv("SCENE_ASSET_SOURCE_ORDER", "").strip()
+    if override:
+        requested = [source.strip().lower() for source in override.split(",")]
+        return [source for source in requested if source in ASSET_SOURCE_NAMES]
+
+    spec = _spec_for(object_name)
+    order = spec.get("source_order")
+    if isinstance(order, list) and order:
+        sources = [str(source) for source in order]
+    else:
+        sources = ["cache", "objaverse", "free", "local", "procedural"]
+
+    disabled = {
+        name
+        for name in ASSET_SOURCE_NAMES
+        if os.getenv(f"SCENE_DISABLE_{name.upper()}", "0") == "1"
+    }
+    if not ENABLE_PROCEDURAL_FALLBACK:
+        disabled.add("procedural")
+    return [source for source in sources if source not in disabled]
+
+
+def _cache_allowed_for(object_name: str, entry: Dict[str, object]) -> bool:
+    source = str(entry.get("source", ""))
+    order = _source_order_for(object_name)
+    if source.startswith("objaverse:") and "cache" not in order:
+        return False
+    return True
 
 
 def _ensure_cache_dirs() -> None:
@@ -315,8 +435,11 @@ def _load_cache_index() -> Dict[str, Dict]:
 
 def _save_cache_index(data: Dict[str, Dict]) -> None:
     _ensure_cache_dirs()
-    with CACHE_INDEX_PATH.open("w", encoding="utf-8") as handle:
-        json.dump(data, handle, indent=2)
+    try:
+        with CACHE_INDEX_PATH.open("w", encoding="utf-8") as handle:
+            json.dump(data, handle, indent=2)
+    except OSError:
+        return
 
 
 def _touch_cache_entry(key: str, entry: Dict) -> None:
@@ -388,6 +511,9 @@ def _candidate_object_labels(object_name: str) -> List[str]:
         labels.add(canonical[:-1])
     else:
         labels.add(f"{canonical}s")
+    for token in _search_tokens(canonical):
+        labels.add(token)
+        labels.add(f"{token}s")
     return [label for label in labels if label]
 
 
@@ -445,6 +571,20 @@ def _planet_cache_paths(object_name: str) -> Tuple[Path, Path]:
     texture_path = target_dir / f"{object_name}{texture_suffix}"
     usda_path = target_dir / f"{object_name}.procedural.usda"
     return texture_path, usda_path
+
+
+def _procedural_cache_paths(object_name: str, suffix: str = "procedural") -> Path:
+    object_name = canonicalize_object_name(object_name)
+    target_dir = SAFE_GENERATED_CACHE_DIR / object_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir / f"{object_name}.{suffix}.usda"
+
+
+def _procedural_asset_dir(object_name: str) -> Path:
+    object_name = canonicalize_object_name(object_name)
+    target_dir = SAFE_GENERATED_CACHE_DIR / object_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
 
 
 def _build_uv_sphere(radius: float = 0.5, latitude_segments: int = 32, longitude_segments: int = 64):
@@ -580,6 +720,279 @@ def _build_procedural_planet_asset(object_name: str, texture_path: Optional[Path
     return destination_path, metadata
 
 
+def _build_procedural_clock_asset(object_name: str, destination_path: Path) -> Tuple[Path, Dict[str, object]]:
+    spec = _spec_for(object_name)
+    diameter = float(list(spec.get("target_size", [1.2, 1.2, 0.2]))[0])
+    thickness = float(list(spec.get("target_size", [1.2, 1.2, 0.2]))[2])
+    texture_path = _generate_clock_texture(object_name)
+
+    stage = Usd.Stage.CreateNew(str(destination_path))
+    root = UsdGeom.Xform.Define(stage, "/Root")
+    stage.SetDefaultPrim(root.GetPrim())
+
+    body = UsdGeom.Cylinder.Define(stage, "/Root/ClockBody")
+    body.CreateRadiusAttr(max(0.1, diameter / 2.0))
+    body.CreateHeightAttr(max(0.05, thickness))
+    body.CreateAxisAttr().Set(UsdGeom.Tokens.z)
+    body_material = _create_preview_material(
+        stage,
+        "/Root/ClockBodyMaterial",
+        texture_path=None,
+        emissive=False,
+        fallback_color=list(spec.get("fallback_color", [0.92, 0.88, 0.72])),
+    )
+    UsdShade.MaterialBindingAPI(body.GetPrim()).Bind(body_material)
+
+    face = UsdGeom.Cylinder.Define(stage, "/Root/ClockFace")
+    face.CreateRadiusAttr(max(0.08, (diameter / 2.0) * 0.88))
+    face.CreateHeightAttr(max(0.02, thickness * 0.35))
+    face.CreateAxisAttr().Set(UsdGeom.Tokens.z)
+    face.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.0, float(thickness * 0.2)))
+    face_material = _create_preview_material(
+        stage,
+        "/Root/ClockFaceMaterial",
+        texture_path=texture_path,
+        emissive=False,
+        fallback_color=[0.98, 0.97, 0.94],
+    )
+    UsdShade.MaterialBindingAPI(face.GetPrim()).Bind(face_material)
+
+    hour_hand = UsdGeom.Cube.Define(stage, "/Root/HourHand")
+    hour_hand.CreateSizeAttr(1.0)
+    hour_hand.AddScaleOp().Set(Gf.Vec3f(float(diameter * 0.06), float(diameter * 0.32), float(thickness * 0.25)))
+    hour_hand.AddTranslateOp().Set(Gf.Vec3f(0.0, float(diameter * 0.16), float(thickness * 0.32)))
+
+    minute_hand = UsdGeom.Cube.Define(stage, "/Root/MinuteHand")
+    minute_hand.CreateSizeAttr(1.0)
+    minute_hand.AddScaleOp().Set(Gf.Vec3f(float(diameter * 0.04), float(diameter * 0.44), float(thickness * 0.22)))
+    minute_hand.AddTranslateOp().Set(Gf.Vec3f(0.0, float(diameter * 0.22), float(thickness * 0.35)))
+    minute_hand.AddRotateZOp().Set(-35.0)
+
+    hand_material = _create_preview_material(
+        stage,
+        "/Root/ClockHandMaterial",
+        texture_path=None,
+        emissive=False,
+        fallback_color=[0.12, 0.12, 0.12],
+    )
+    UsdShade.MaterialBindingAPI(hour_hand.GetPrim()).Bind(hand_material)
+    UsdShade.MaterialBindingAPI(minute_hand.GetPrim()).Bind(hand_material)
+
+    stage.GetRootLayer().Save()
+
+    metadata = {
+        "scale_factor": 1.0,
+        "size": [diameter, diameter, thickness],
+        "original_size": [diameter, diameter, thickness],
+        "face_count": 0,
+        "quality_score": 1.0,
+    }
+    return destination_path, metadata
+
+
+def _generate_clock_texture(object_name: str) -> Path:
+    target_dir = _procedural_asset_dir(object_name)
+    texture_path = target_dir / f"{canonicalize_object_name(object_name)}_face.png"
+    if texture_path.exists():
+        return texture_path
+
+    size = 1024
+    image = Image.new("RGB", (size, size), (245, 240, 222))
+    draw = ImageDraw.Draw(image)
+    center = size // 2
+    radius = int(size * 0.42)
+
+    draw.ellipse(
+        (center - radius, center - radius, center + radius, center + radius),
+        fill=(246, 241, 228),
+        outline=(55, 45, 34),
+        width=18,
+    )
+    inner_radius = int(radius * 0.92)
+    draw.ellipse(
+        (center - inner_radius, center - inner_radius, center + inner_radius, center + inner_radius),
+        outline=(180, 150, 96),
+        width=8,
+    )
+
+    for hour in range(12):
+        angle = math.radians((hour / 12.0) * 360.0 - 90.0)
+        outer = radius * 0.82
+        inner = radius * (0.68 if hour % 3 == 0 else 0.74)
+        x1 = center + int(math.cos(angle) * inner)
+        y1 = center + int(math.sin(angle) * inner)
+        x2 = center + int(math.cos(angle) * outer)
+        y2 = center + int(math.sin(angle) * outer)
+        draw.line((x1, y1, x2, y2), fill=(40, 35, 32), width=10 if hour % 3 == 0 else 6)
+
+    draw.line(
+        (center, center, center, center - int(radius * 0.38)),
+        fill=(32, 32, 32),
+        width=14,
+    )
+    draw.line(
+        (center, center, center + int(radius * 0.28), center - int(radius * 0.14)),
+        fill=(120, 28, 28),
+        width=8,
+    )
+    draw.ellipse(
+        (center - 16, center - 16, center + 16, center + 16),
+        fill=(180, 150, 96),
+        outline=(32, 32, 32),
+        width=4,
+    )
+
+    image.save(texture_path)
+    return texture_path
+
+
+def _semantic_color(object_name: str) -> List[float]:
+    digest = hashlib.sha256(canonicalize_object_name(object_name).encode("utf-8")).digest()
+    hue = digest[0] / 255.0
+    saturation = 0.38 + (digest[1] / 255.0) * 0.32
+    value = 0.62 + (digest[2] / 255.0) * 0.28
+
+    i = int(hue * 6.0)
+    f = hue * 6.0 - i
+    p = value * (1.0 - saturation)
+    q = value * (1.0 - f * saturation)
+    t = value * (1.0 - (1.0 - f) * saturation)
+    choices = [
+        (value, t, p),
+        (q, value, p),
+        (p, value, t),
+        (p, q, value),
+        (t, p, value),
+        (value, p, q),
+    ]
+    return [round(float(component), 3) for component in choices[i % 6]]
+
+
+def _generate_semantic_texture(object_name: str) -> Path:
+    target_dir = _procedural_asset_dir(object_name)
+    texture_path = target_dir / f"{canonicalize_object_name(object_name)}_texture.png"
+    if texture_path.exists():
+        return texture_path
+
+    base = _semantic_color(object_name)
+    base_rgb = tuple(int(max(0.0, min(1.0, channel)) * 255) for channel in base)
+    accent_rgb = tuple(min(255, int(channel * 1.25 + 24)) for channel in base_rgb)
+    dark_rgb = tuple(max(0, int(channel * 0.45)) for channel in base_rgb)
+
+    size = 1024
+    image = Image.new("RGB", (size, size), base_rgb)
+    draw = ImageDraw.Draw(image)
+    tokens = _search_tokens(object_name)
+    for y in range(0, size, 64):
+        fill = accent_rgb if (y // 64) % 2 == 0 else base_rgb
+        draw.rectangle((0, y, size, y + 32), fill=fill)
+    for x in range(-size, size, 96):
+        draw.line((x, size, x + size, 0), fill=dark_rgb, width=10)
+    for index, token in enumerate(tokens[:3]):
+        y = 120 + index * 170
+        draw.rectangle((96, y - 38, size - 96, y + 38), fill=base_rgb, outline=dark_rgb, width=6)
+        draw.text((128, y - 18), token.upper(), fill=dark_rgb)
+
+    image.save(texture_path)
+    return texture_path
+
+
+def generate_procedural_proxy_asset(name: str) -> Optional[Dict[str, object]]:
+    if not ENABLE_PROCEDURAL_FALLBACK or os.getenv("SCENE_DISABLE_PROCEDURAL", "0") == "1":
+        return None
+
+    object_name = canonicalize_object_name(name)
+    destination_path = _procedural_cache_paths(object_name, suffix="proxy")
+    texture_path = _generate_semantic_texture(object_name)
+    color = _semantic_color(object_name)
+    stage = Usd.Stage.CreateNew(str(destination_path))
+    root = UsdGeom.Xform.Define(stage, "/Root")
+    stage.SetDefaultPrim(root.GetPrim())
+
+    lower = object_name.lower()
+    if lower == "bed" or lower.endswith("_bed"):
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.35, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(2.1, 0.7, 3.0))
+        size = [2.1, 0.7, 3.0]
+    elif "pillow" in lower:
+        mesh = UsdGeom.Sphere.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateRadiusAttr(0.5)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.18, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(0.85, 0.22, 0.55))
+        size = [0.85, 0.22, 0.55]
+    elif "blanket" in lower:
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.07, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(1.9, 0.14, 1.8))
+        size = [1.9, 0.14, 1.8]
+    elif any(key in lower for key in ("nightstand", "cabinet", "dresser")):
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.38, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(0.7, 0.76, 0.55))
+        size = [0.7, 0.76, 0.55]
+    elif any(key in lower for key in ("wardrobe", "closet")):
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 1.1, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(1.25, 2.2, 0.65))
+        size = [1.25, 2.2, 0.65]
+    elif any(key in lower for key in ("column", "pillar", "spire", "tower")):
+        mesh = UsdGeom.Cylinder.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateRadiusAttr(0.28 if "spire" not in lower else 0.18)
+        mesh.CreateHeightAttr(2.4 if "spire" not in lower else 3.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 1.2 if "spire" not in lower else 1.5, 0.0))
+        size = [0.56, 2.4 if "spire" not in lower else 3.0, 0.56]
+    elif any(key in lower for key in ("arch", "gate")):
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 1.0, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(1.8, 2.0, 0.28))
+        size = [1.8, 2.0, 0.28]
+    elif any(key in lower for key in ("noodle", "rope", "vine")):
+        mesh = UsdGeom.Cylinder.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateRadiusAttr(0.16)
+        mesh.CreateHeightAttr(2.8)
+        mesh.CreateAxisAttr().Set(UsdGeom.Tokens.x)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.45, 0.0))
+        mesh.AddRotateZOp().Set(12.0)
+        size = [2.8, 0.32, 0.32]
+    else:
+        mesh = UsdGeom.Sphere.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateRadiusAttr(0.55)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 0.55, 0.0))
+        size = [1.1, 1.1, 1.1]
+
+    material = _create_preview_material(
+        stage,
+        f"/Root/{object_name.title().replace('_', '')}Material",
+        texture_path=texture_path,
+        emissive=False,
+        fallback_color=color,
+    )
+    UsdShade.MaterialBindingAPI(mesh.GetPrim()).Bind(material)
+    stage.GetRootLayer().Save()
+
+    entry = _make_cache_entry(
+        object_name=object_name,
+        source_name=f"procedural-proxy:{object_name}",
+        source_asset_path=texture_path,
+        asset_path=destination_path,
+        extra_meta={
+            "scale_factor": 1.0,
+            "size": size,
+            "original_size": size,
+            "face_count": 0,
+            "quality_score": 0.35,
+        },
+    )
+    _touch_cache_entry(_cache_key(object_name), entry)
+    return entry
+
+
 def _retrieve_planet_asset(object_name: str) -> Optional[Dict[str, object]]:
     object_name = canonicalize_object_name(object_name)
     spec = _spec_for(object_name)
@@ -603,6 +1016,34 @@ def _retrieve_planet_asset(object_name: str) -> Optional[Dict[str, object]]:
         object_name=object_name,
         source_name=f"planet-texture:{object_name}",
         source_asset_path=texture_path,
+        asset_path=asset_path,
+        extra_meta=extra_meta,
+    )
+    _touch_cache_entry(_cache_key(object_name), entry)
+    return entry
+
+
+def generate_planet_asset(name: str) -> Optional[Dict[str, object]]:
+    """
+    Public deterministic planet-asset generator.
+
+    Returns the same asset-spec structure used by `find_asset(...)` so callers
+    can request a procedural planet directly when needed.
+    """
+    return _retrieve_planet_asset(name)
+
+
+def generate_clock_asset(name: str) -> Optional[Dict[str, object]]:
+    object_name = canonicalize_object_name(name)
+    if object_name != "clock":
+        return None
+
+    destination_path = _procedural_cache_paths(object_name, suffix="procedural")
+    asset_path, extra_meta = _build_procedural_clock_asset(object_name, destination_path)
+    entry = _make_cache_entry(
+        object_name=object_name,
+        source_name="procedural:clock",
+        source_asset_path=destination_path,
         asset_path=asset_path,
         extra_meta=extra_meta,
     )
@@ -788,6 +1229,9 @@ def retrieve_objaverse_asset(object_name: str) -> Optional[Dict[str, object]]:
     object_name = canonicalize_object_name(object_name)
     spec = _spec_for(object_name)
 
+    if os.getenv("SCENE_DISABLE_OBJAVERSE", "0") == "1":
+        return None
+
     try:
         import objaverse
     except Exception:
@@ -809,7 +1253,7 @@ def retrieve_objaverse_asset(object_name: str) -> Optional[Dict[str, object]]:
     best_score = -1.0
 
     for category in categories:
-        uids = sorted(lvis.get(category, []))[:OBJAVERSE_CANDIDATE_LIMIT]
+        uids = sorted(lvis.get(category, []))[:_objaverse_candidate_limit()]
         if not uids:
             continue
         for uid in uids:
@@ -836,12 +1280,12 @@ def retrieve_objaverse_asset(object_name: str) -> Optional[Dict[str, object]]:
             if score > best_score:
                 best_score = score
                 best_entry = entry
-            if score >= MIN_OBJAVERSE_SCORE:
+            if score >= _min_objaverse_score():
                 break
-        if best_score >= MIN_OBJAVERSE_SCORE:
+        if best_score >= _min_objaverse_score():
             break
 
-    min_score = float(spec.get("min_score", MIN_OBJAVERSE_SCORE))
+    min_score = _min_objaverse_score() if os.getenv("OBJAVERSE_MIN_SCORE") else float(spec.get("min_score", MIN_OBJAVERSE_SCORE))
     if best_entry and float(best_entry.get("quality_score", 0.0)) >= min_score:
         _touch_cache_entry(_cache_key(object_name), best_entry)
         return best_entry
@@ -867,31 +1311,48 @@ def retrieve_free_source_asset(object_name: str) -> Optional[Dict[str, object]]:
 def find_asset(object_name: str) -> Optional[Dict[str, object]]:
     """
     Resolve an asset using:
-    1. fresh cached normalized external asset
-    2. Objaverse
-    3. curated free-source download
-    4. local USDA fallback
+    1. per-object source order
+    2. procedural fallback
     """
     object_name = canonicalize_object_name(object_name)
 
-    cached = _read_fresh_cache(object_name)
-    if cached:
-        return cached
-
     if _is_planet_asset(object_name):
-        planet_match = _retrieve_planet_asset(object_name)
+        planet_match = generate_planet_asset(object_name)
         if planet_match:
             return planet_match
 
-    objaverse_match = retrieve_objaverse_asset(object_name)
-    if objaverse_match:
-        return objaverse_match
+    if object_name == "clock":
+        clock_match = generate_clock_asset(object_name)
+        if clock_match:
+            return clock_match
 
-    free_match = retrieve_free_source_asset(object_name)
-    if free_match:
-        return free_match
+    for source in _source_order_for(object_name):
+        if source == "cache":
+            cached = _read_fresh_cache(object_name)
+            if cached and _cache_allowed_for(object_name, cached):
+                if str(cached.get("source", "")).startswith("procedural-proxy:"):
+                    proxy = generate_procedural_proxy_asset(object_name)
+                    if proxy:
+                        return proxy
+                return cached
+        elif source == "local":
+            local = _local_fallback_asset(object_name)
+            if local:
+                return local
+        elif source == "objaverse":
+            objaverse_match = retrieve_objaverse_asset(object_name)
+            if objaverse_match:
+                return objaverse_match
+        elif source == "free":
+            free_match = retrieve_free_source_asset(object_name)
+            if free_match:
+                return free_match
+        elif source == "procedural":
+            proxy = generate_procedural_proxy_asset(object_name)
+            if proxy:
+                return proxy
 
-    local = _local_asset_map().get(object_name)
-    if local and Path(str(local["asset_path"])).exists():
-        return local
+    proxy = generate_procedural_proxy_asset(object_name)
+    if proxy:
+        return proxy
     return None

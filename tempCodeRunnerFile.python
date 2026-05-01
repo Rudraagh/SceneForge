@@ -1,0 +1,33 @@
+from PIL import Image, ImageDraw
+
+W, H = 512, 512
+img = Image.new("RGB", (W, H), (255, 255, 255))
+draw = ImageDraw.Draw(img)
+
+# colors (EXACT match)
+DESK = (160, 82, 45)
+CHAIR = (65, 105, 225)
+BOARD = (34, 139, 34)
+
+# blackboard
+draw.rectangle([100, 20, 400, 60], fill=BOARD)
+
+# desks + chairs grid
+start_x = 80
+start_y = 120
+dx = 100
+dy = 80
+
+for row in range(3):
+    for col in range(4):
+        x = start_x + col * dx
+        y = start_y + row * dy
+
+        # desk
+        draw.rectangle([x, y, x+60, y+30], fill=DESK)
+
+        # chair (below desk)
+        draw.rectangle([x+15, y+40, x+45, y+70], fill=CHAIR)
+
+img.save("blueprint.png")
+print("Saved perfect blueprint.png")

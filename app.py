@@ -30,10 +30,12 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 BLUEPRINT_PATH = os.path.join(PROJECT_ROOT, "blueprint.png")
 USD_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "generated_scene.usda"))
 BLENDER_PATH = r"C:\\Program Files\\Blender Foundation\\Blender 4.0\\blender.exe"
+PREFERRED_PYTHON = r"C:\\Users\\arun1\\omniverse-kit-venv312\\Scripts\\python.exe"
 LOG_KEY = "logs"
 RETURN_CODE_KEY = "return_code"
 LAST_PROMPT_KEY = "last_prompt"
 PLOTLY_CHART_KEY = "sceneforge_plotly_objects"
+PIPELINE_PYTHON_KEY = "pipeline_python"
 
 
 @st.cache_data(ttl=20)
@@ -52,9 +54,44 @@ def save_blueprint_file(uploaded_file) -> None:
         handle.write(uploaded_file.getbuffer())
 
 
-def run_pipeline(prompt):
-    # Use the same interpreter as Streamlit so venv + installed deps (e.g. pxr) match.
-    cmd = [sys.executable, "direct_usd_scene.py", "-b", prompt]
+def resolve_pipeline_python():
+    override = os.getenv("SCENEFORGE_PYTHON", "").strip()
+    candidates = [override, PREFERRED_PYTHON, sys.executable]
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            return os.path.abspath(candidate)
+    return "python"
+
+
+def run_pipeline(prompt, options):
+    pipeline_python = resolve_pipeline_python()
+    cmd = [
+        pipeline_python,
+        "direct_usd_scene.py",
+        "--mode",
+        options["mode"],
+        "--output",
+        options["output_path"],
+    ]
+    if options["use_blueprint"]:
+        cmd.extend(["--blueprint", "--blueprint-path", BLUEPRINT_PATH])
+    if options["prefer_local_assets"]:
+        cmd.append("--prefer-local-assets")
+    if options["disable_cache"]:
+        cmd.append("--disable-cache")
+    if options["disable_objaverse"]:
+        cmd.append("--disable-objaverse")
+    if options["disable_free"]:
+        cmd.append("--disable-free")
+    if options["disable_procedural"]:
+        cmd.append("--disable-procedural")
+    if options["asset_source_order"].strip():
+        cmd.extend(["--asset-source-order", options["asset_source_order"].strip()])
+    if options["objaverse_candidate_limit"] is not None:
+        cmd.extend(["--objaverse-candidate-limit", str(options["objaverse_candidate_limit"])])
+    if options["objaverse_min_score"] is not None:
+        cmd.extend(["--objaverse-min-score", str(options["objaverse_min_score"])])
+    cmd.append(prompt)
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
@@ -74,7 +111,7 @@ def run_pipeline(prompt):
         if combined_logs:
             combined_logs += "\n"
         combined_logs += stderr
-    return combined_logs, process.returncode
+    return combined_logs, process.returncode, pipeline_python
 
 
 def extract_metrics(logs):
@@ -103,6 +140,9 @@ def extract_explanation(logs):
 
 
 def extract_output_path(logs):
+    path_matches = re.findall(r"\[INFO\] Exported stage path: (.+)", logs)
+    if path_matches:
+        return os.path.abspath(path_matches[-1].strip())
     matches = re.findall(r"\[INFO\] Exported stage to file: (.+)", logs)
     if matches:
         return os.path.abspath(os.path.join(PROJECT_ROOT, matches[-1].strip()))
@@ -191,16 +231,48 @@ with st.sidebar:
     st.header("Input")
 
     uploaded_file = st.file_uploader("Upload Blueprint Image", type=["png", "jpg"])
+    use_blueprint = st.checkbox("Use blueprint placement", value=True)
 
     prompt = st.text_input(
         "Scene Prompt",
         value="a classroom with desks and chairs",
     )
 
+    st.header("Generation")
+    mode = st.selectbox("Mode", ["ai", "rule"], index=0)
+    output_path = st.text_input("Output USDA", value=USD_PATH)
+
+    st.header("Assets")
+    prefer_local_assets = st.checkbox("Prefer local assets", value=True)
+    disable_cache = st.checkbox("Disable cache", value=False)
+    disable_objaverse = st.checkbox("Disable Objaverse", value=False)
+    disable_free = st.checkbox("Disable free downloads", value=False)
+    disable_procedural = st.checkbox("Disable procedural fallback", value=False)
+    asset_source_order = st.text_input(
+        "Custom source order",
+        value="",
+        placeholder="local,free,cache,objaverse,procedural",
+    )
+    objaverse_candidate_limit = st.number_input(
+        "Objaverse candidate limit",
+        min_value=1,
+        max_value=50,
+        value=5,
+        step=1,
+    )
+    objaverse_min_score = st.slider(
+        "Objaverse min score",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.45,
+        step=0.01,
+    )
+
     run_btn = st.button("Generate Scene")
 
     if uploaded_file is not None:
         st.caption(f"Blueprint ready: `{uploaded_file.name}`")
+    st.caption(f"Pipeline Python: `{resolve_pipeline_python()}`")
 
     st.divider()
     st.caption("AI object explanations")
@@ -218,16 +290,30 @@ if uploaded_file is not None:
 
 
 if run_btn:
-    if uploaded_file is None:
+    if use_blueprint and uploaded_file is None and not os.path.exists(BLUEPRINT_PATH):
         st.error("Please upload a blueprint image before running the pipeline.")
     elif not prompt.strip():
         st.error("Please enter a scene prompt.")
     else:
+        options = {
+            "mode": mode,
+            "use_blueprint": use_blueprint,
+            "output_path": output_path.strip() or USD_PATH,
+            "prefer_local_assets": prefer_local_assets,
+            "disable_cache": disable_cache,
+            "disable_objaverse": disable_objaverse,
+            "disable_free": disable_free,
+            "disable_procedural": disable_procedural,
+            "asset_source_order": asset_source_order,
+            "objaverse_candidate_limit": int(objaverse_candidate_limit),
+            "objaverse_min_score": float(objaverse_min_score),
+        }
         with st.spinner("Running pipeline..."):
-            logs, return_code = run_pipeline(prompt.strip())
+            logs, return_code, pipeline_python = run_pipeline(prompt.strip(), options)
         st.session_state[LOG_KEY] = logs
         st.session_state[RETURN_CODE_KEY] = return_code
         st.session_state[LAST_PROMPT_KEY] = prompt.strip()
+        st.session_state[PIPELINE_PYTHON_KEY] = pipeline_python
 
         if return_code == 0:
             st.success("Scene generated successfully")
@@ -255,6 +341,7 @@ if logs:
             st.write(f"**Prompt:** {st.session_state[LAST_PROMPT_KEY]}")
         if return_code is not None:
             st.write(f"**Return code:** {return_code}")
+        st.write(f"**Pipeline Python:** `{st.session_state.get(PIPELINE_PYTHON_KEY, resolve_pipeline_python())}`")
         st.write(f"**Blueprint file:** `{BLUEPRINT_PATH}`")
         st.write(f"**USD exists:** {'Yes' if os.path.exists(usd_path) else 'No'}")
 
