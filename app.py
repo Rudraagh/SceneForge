@@ -20,6 +20,7 @@ from pipeline_service import (
     extract_explanation,
     extract_metrics,
     extract_output_path,
+    list_scene_objects_resolved,
     open_in_blender,
     resolve_pipeline_python,
     run_pipeline,
@@ -31,7 +32,6 @@ from scene_explainer import (
     SceneObject,
     _ollama_base_url,
     explain_object_in_scene,
-    list_scene_objects,
 )
 
 
@@ -281,7 +281,7 @@ if logs:
             "then load a short multi-part explanation from your local Ollama server."
         )
         try:
-            scene_objs = list_scene_objects(usd_path)
+            scene_objs = list_scene_objects_resolved(usd_path)
         except RuntimeError as exc:
             st.warning(str(exc))
             scene_objs = []

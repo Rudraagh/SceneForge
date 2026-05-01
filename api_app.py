@@ -98,20 +98,21 @@ def ollama_status() -> Dict[str, Any]:
     }
 
 
-def _save_blueprint_from_payload(data: GenerateRequest) -> None:
+def _save_blueprint_from_payload(data: GenerateRequest) -> bool:
     if not data.blueprint_base64:
-        return
+        return False
     raw = data.blueprint_base64.strip()
     if "," in raw[:120]:
         raw = raw.split(",", 1)[1]
     save_blueprint_bytes(base64.b64decode(raw))
+    return True
 
 
 @app.post("/api/generate")
 def generate(data: GenerateRequest) -> Dict[str, Any]:
     from pipeline_service import USD_PATH
 
-    _save_blueprint_from_payload(data)
+    saved_blueprint = _save_blueprint_from_payload(data)
 
     opts: Dict[str, Any] = {
         "mode": data.mode if data.mode in ("ai", "rule") else "rule",
@@ -127,10 +128,10 @@ def generate(data: GenerateRequest) -> Dict[str, Any]:
         "objaverse_min_score": data.objaverse_min_score,
     }
 
-    if data.use_blueprint and not os.path.exists(BLUEPRINT_PATH):
+    if data.use_blueprint and not saved_blueprint:
         raise HTTPException(
             status_code=400,
-            detail="Blueprint mode is on but no blueprint on disk. Send blueprint_base64 or save blueprint.png first.",
+            detail="Blueprint mode is on. Send blueprint_base64 with this request or turn blueprint mode off.",
         )
 
     logs, code, py = run_pipeline(data.prompt.strip(), opts)

@@ -47,7 +47,7 @@ function scrollToId(id: string) {
 export default function App() {
   const [prompt, setPrompt] = useState("a medieval classroom with wooden desks and a blackboard");
   const [mode, setMode] = useState<"ai" | "rule">("rule");
-  const [useBlueprint, setUseBlueprint] = useState(true);
+  const [useBlueprint, setUseBlueprint] = useState(false);
   const [blueprintFile, setBlueprintFile] = useState<File | null>(null);
   const [outputPath, setOutputPath] = useState("");
   const [preferLocal, setPreferLocal] = useState(true);
@@ -115,6 +115,9 @@ export default function App() {
     setObjects([]);
     setSelectedPath("");
     try {
+      if (useBlueprint && !blueprintFile) {
+        throw new Error("Blueprint placement is enabled. Attach a blueprint image or turn blueprint placement off.");
+      }
       let blueprint_base64: string | undefined;
       if (useBlueprint && blueprintFile) {
         blueprint_base64 = await fileToB64(blueprintFile);
