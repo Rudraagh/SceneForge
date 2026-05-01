@@ -9,9 +9,12 @@ The repo supports two scene-authoring backends:
 
 The default user-facing entry point is `main.py`.
 
-The repo also includes a demo UI:
+The repo also includes demo UIs:
 
 - `app.py`: Streamlit interface for blueprint upload, pipeline execution, metrics, logs, explanation output, and Blender launch
+- `api_app.py` + `frontend/`: responsive **React + Vite + Tailwind** studio with the same controls as Streamlit, a **Plotly 3D** prim picker, and **Ollama** object explanations (see `frontend/README.md`)
+
+The single-page marketing experience (hero through workflow) lives in `frontend/src/components/SiteMarketing.tsx` and includes: platform capabilities, architecture, interoperability, research scenarios, observability, **positioning** (SceneForge vs other approaches), **sample prompts** with copy-to-clipboard, **requirements** (Python / Node / Ollama / disk plus manifest paths), **privacy and data flow**, **FAQ** (GPU, Blender vs USDA, Ollama locality, Objaverse/network, rule vs AI mode), quick start, and footer anchors. `frontend/src/App.tsx` wires those sections, header navigation, and the studio shell.
 
 ## What It Can Do
 
@@ -34,6 +37,7 @@ The repo also includes a demo UI:
 - Try to export a flattened self-contained USDA for easier sharing
 - Open a lightweight local viewer for quick inspection
 - Run a Streamlit demo UI for research presentation and demos
+- Run the **React + FastAPI** web studio: generation UI, Plotly object explorer, Ollama explanations, and an on-page **guide** (capabilities through FAQ, sample prompts, privacy, requirements, quick start)
 
 ## Architecture
 
@@ -44,9 +48,9 @@ The high-level flow is:
 3. `direct_usd_scene.py` builds a scene graph from:
    - local LLM output via `ai_scene_graph.py`, or
    - deterministic templates and constraints
-4. If `blueprint.png` exists, blueprint parsing and position merging can influence layout.
+4. If blueprint mode is on and the scene is not a deterministic **solar system**, `blueprint.png` is parsed and either **replaces** the scene (strict mode with regions) or **merges** positions—this applies to **both AI and rule** paths in `direct_usd_scene.build_scene_from_prompt()`.
 5. Prompt relations are extracted or inferred.
-6. The graph is arranged and optionally refined by layout and agent loops.
+6. The graph is arranged and optionally refined by layout and agent loops (skipped in deterministic / rule mode except blueprint placement above).
 7. `objaverse_loader.py` resolves the best available asset for each object.
 8. USD prims are authored, transformed, scaled, and exported.
 9. `main.py` optionally flattens the scene and launches `view_generated_scene.py`.
@@ -83,6 +87,7 @@ In practice, the project "researches" a scene by combining local LLM reasoning, 
 
 `ai_scene_graph.detect_scene_type()` currently recognizes:
 
+- `courtyard` (courtyard / patio / plaza / atrium / quad, or **outdoor** prompts with garden, park, bench, tree, fountain, shade, etc.)
 - `classroom`
 - `throne_room`
 - `forest_camp`
@@ -90,6 +95,8 @@ In practice, the project "researches" a scene by combining local LLM reasoning, 
 - `tavern`
 - `solar_system`
 - `studio` fallback
+
+Rule mode uses a fixed template per type (for example **courtyard** uses benches, pine trees, and a central **barrel** as a stand-in where no dedicated fountain mesh exists in the canonical library).
 
 ## Supported Object Library
 
@@ -120,7 +127,7 @@ The built-in canonical object set currently includes:
 - `uranus`
 - `neptune`
 
-Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, and `stall` are canonicalized into those supported names.
+Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, `stall`, **`fountain` / `water_feature` → `barrel`**, and related forms are canonicalized into those supported names.
 
 ## Main Files And What They Do
 
@@ -156,6 +163,26 @@ Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, and `stall` are ca
   - runs `direct_usd_scene.py -b "<prompt>"` in a subprocess
   - forces UTF-8 subprocess IO on Windows to avoid Unicode path crashes
   - displays logs, parsed metrics, explanation lines, output path, and Blender launch controls
+
+- `api_app.py`
+  - FastAPI service for the React studio (`uvicorn api_app:app --reload --host 127.0.0.1 --port 8765`)
+  - `POST /api/generate` — runs `pipeline_service.run_pipeline()` (subprocess `direct_usd_scene.py` with the **resolved pipeline Python**)
+  - `GET /api/scene-objects` — lists `/World` prims for Plotly (via `list_scene_objects_resolved()` / optional `list_scene_objects_json.py` subprocess)
+  - `POST /api/explain-object` — Ollama-backed prim explanations via `scene_explainer.explain_object_in_scene()`
+  - `GET /api/ollama-status`, `GET /api/pipeline-python`, `GET /api/health`, `POST /api/open-blender`
+  - CORS defaults to local Vite origins; override with `SCENEFORGE_CORS_ORIGINS` (comma-separated)
+
+- `pipeline_service.py`
+  - shared subprocess runner, log parsing (`extract_metrics`, `extract_output_path`, `extract_explanation`), blueprint bytes to disk, Blender launch helper
+  - `resolve_pipeline_python()` — prefers **`SCENEFORGE_PYTHON`** when set and the file exists, else an in-module default candidate path (override in `pipeline_service.py` for your lab), else **`sys.executable`**
+  - **`list_scene_objects_resolved()`** — calls `list_scene_objects()` in-process; if `pxr` is missing in the **API** interpreter but the pipeline Python has USD, delegates to `list_scene_objects_json.py` in a subprocess so the 3D picker still works
+
+- `list_scene_objects_json.py`
+  - small CLI: prints JSON array of scene objects for a USDA path; used only by `list_scene_objects_resolved()` when the API process cannot import `pxr`
+
+- `scene_explainer.py`
+  - USD prim enumeration and Ollama `/api/generate` calls for explanations
+  - connection-refused errors (including **Windows WinError 10061**) surface an actionable message (start Ollama / `ollama serve`, `OLLAMA_API_URL`, Recheck in the UI)
 
 ### Scene generation and layout
 
@@ -266,7 +293,7 @@ These are the highest-leverage functions if you are modifying behavior:
   - `launch_viewer()`
 
 - `direct_usd_scene.py`
-  - `build_scene_from_prompt()`
+  - `build_scene_from_prompt()` (blueprint path shared for AI and rule modes; solar-system deterministic skips blueprint merge)
   - `add_room_shell()`
   - `create_placeholder_geometry()`
   - `export_stage_safely()`
@@ -289,6 +316,9 @@ These are the highest-leverage functions if you are modifying behavior:
   - `_score_mesh_for_object()`
   - `_retrieve_planet_asset()`
   - `cleanup_stale_cache()`
+
+- `pipeline_service.py`
+  - `list_scene_objects_resolved()`, `run_pipeline()`, `resolve_pipeline_python()`
 
 - `blueprint_agents.py`
   - `evaluate_scene()`
@@ -316,10 +346,13 @@ This installs:
 - `matplotlib`
 - `numpy`
 - `trimesh`
+- `plotly`
+- `fastapi`, `uvicorn`, `pydantic`, `python-multipart` (HTTP API for the React studio)
+- `usd-core` (PyPI package name for Pixar USD bindings used as `pxr` when available)
 
 Note:
 
-- the core scene pipeline also requires Pixar USD Python bindings (`pxr`)
+- the core scene pipeline requires Pixar USD Python bindings (`pxr`); the **same** interpreter that runs `direct_usd_scene.py` should have them, or configure `SCENEFORGE_PYTHON` and use `list_scene_objects_json.py` delegation for `/api/scene-objects`
 - the Omniverse backend also requires Omniverse Kit runtime support
 - AI mode also requires Ollama running locally with the configured model pulled
 
@@ -384,6 +417,17 @@ Useful flags:
 C:\Users\arun1\omniverse-kit-venv312\Scripts\python.exe run_omniverse_scene.py --mode=ai "a medieval market with stalls and barrels"
 ```
 
+### Run the web studio (FastAPI + Vite)
+
+From the repo root, install Python deps, start the API, then follow `frontend/README.md` for `npm install` and `npm run dev` (Vite proxies `/api/*` to port **8765**).
+
+```powershell
+python -m pip install -r requirements.txt
+uvicorn api_app:app --reload --host 127.0.0.1 --port 8765
+```
+
+The React client shows API error **details** for generate, scene-objects, and explain requests (not only generic status text). The studio includes a short note under **Rule** mode describing template choice and blueprint merge behavior.
+
 ### Run the Streamlit UI
 
 ```powershell
@@ -403,9 +447,22 @@ UI flow:
 
 ## Environment Variables
 
+- `SCENEFORGE_PYTHON`
+  - optional absolute path to the Python interpreter used to run `direct_usd_scene.py` from the FastAPI UI
+  - when unset, `pipeline_service.resolve_pipeline_python()` uses an in-repo preferred path constant if that file exists, otherwise **`sys.executable`** (the interpreter running uvicorn)
+
+- `SCENEFORGE_CORS_ORIGINS`
+  - comma-separated origins allowed by the FastAPI CORS middleware (defaults include `http://127.0.0.1:5173` and `http://localhost:5173`)
+
+- `SCENEFORGE_BLENDER_PATH`
+  - optional override for the Blender executable used by `POST /api/open-blender` and Streamlit
+
 - `OLLAMA_API_URL`
   - default: `http://localhost:11434`
-  - base URL used by `main.py` to validate Ollama
+  - base URL used by `main.py` to validate Ollama and by `scene_explainer` / `ai_scene_graph` for HTTP calls
+
+- `OLLAMA_EXPLAIN_MODEL`, `OLLAMA_EXPLAIN_NUM_CTX`, `OLLAMA_EXPLAIN_NUM_PREDICT`
+  - optional overrides for prim-level explanations (`scene_explainer.py`)
 
 - `SCENE_GRAPH_OLLAMA_MODEL`
   - default: `llama3.2:1b`
@@ -526,13 +583,15 @@ If you want better blueprint coverage, expand `DEFAULT_COLOR_MAP` and reduce the
 - Objaverse retrieval only works when the package and local setup are available
 - some external asset downloads require internet access
 - flattened USDA export can still be sensitive to Windows path quirks
-- the Streamlit UI resolves the pipeline interpreter from `SCENEFORGE_PYTHON`, the preferred Omniverse USD Python path, or the current Python executable
-- the Blender button assumes Blender is installed at `C:\Program Files\Blender Foundation\Blender 4.0\blender.exe`
-- no automated tests are currently included
+- the Streamlit UI and `pipeline_service` resolve the pipeline interpreter from `SCENEFORGE_PYTHON`, the preferred Omniverse USD Python path in code, or the current Python executable
+- the Blender button defaults to `C:\Program Files\Blender Foundation\Blender 4.0\blender.exe` unless `SCENEFORGE_BLENDER_PATH` is set
+- there is no dedicated fountain mesh in the canonical library; courtyard-style prompts map **fountain** synonyms to **barrel** for a simple central prop
+- basic automated tests live under `tests/` (for example `tests/test_scene_explainer.py`); they do not cover the full pipeline end-to-end
 
 ## Good Starting Prompts
 
 - `a medieval classroom with wooden desks and a blackboard`
+- `outdoor courtyard with stone benches, a central fountain, and shaded trees along the eastern edge` (rule mode: **courtyard** template; use AI + Ollama for freer object choices)
 - `a royal throne room with banners and torches`
 - `a forest camp with trees, crates and a campfire`
 - `a medieval market with vendor stalls and barrels`
@@ -543,7 +602,7 @@ If you want better blueprint coverage, expand `DEFAULT_COLOR_MAP` and reduce the
 
 1. Add a `pyproject.toml` and pin versions more explicitly
 2. Split layout engines by scene family instead of routing everything through classroom logic
-3. Add tests for prompt parsing, blueprint parsing, and asset resolution
+3. Expand automated tests (blueprint parsing, asset resolution, FastAPI contract tests)
 4. Make `main.py` expose backend selection between direct USD and Omniverse Kit
 5. Expand relation extraction beyond `on`, `beside`, and `near`
 6. Add richer blueprint palettes and legend-based detection
@@ -555,11 +614,13 @@ If you want better blueprint coverage, expand `DEFAULT_COLOR_MAP` and reduce the
 This project already has a surprisingly rich prototype stack:
 
 - local LLM scene planning
-- deterministic safety fallback
+- deterministic safety fallback and additional **rule templates** (including **courtyard**)
 - asset retrieval and normalization
-- blueprint-conditioned generation
-- iterative scene refinement
+- blueprint-conditioned generation (**including rule mode**, except deterministic solar-system scenes)
+- iterative scene refinement (skipped in pure rule/deterministic runs)
 - procedural planet generation
 - local USD preview
+- **FastAPI + React** studio with marketing/FAQ/requirements content, Plotly exploration, and clearer Ollama connectivity errors
+- **USD prim listing** that can delegate to the pipeline Python when the API host lacks `pxr`
 
-What it does not yet have is packaging polish, automated verification, or a fully generalized layout system. The README now reflects the code as it exists today rather than an idealized version.
+What it does not yet have is packaging polish, broad automated verification, or a fully generalized layout system. The README reflects the code as it exists today rather than an idealized version.

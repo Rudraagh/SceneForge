@@ -43,6 +43,9 @@ OBJECT_SCALE_MAP = {
     "bookshelf": 1.0,
     "lamp": 1.0,
     "clock": 1.0,
+    "bench": 0.55,
+    "pine_tree": 0.35,
+    "barrel": 0.45,
 }
 OBJECT_TARGET_SIZE_MAP = {
     "chair": [0.9, 1.0, 0.9],
@@ -52,6 +55,9 @@ OBJECT_TARGET_SIZE_MAP = {
     "bookshelf": [1.2, 1.8, 0.45],
     "lamp": [0.45, 1.2, 0.45],
     "clock": [1.2, 1.2, 0.2],
+    "bench": [1.8, 0.55, 0.65],
+    "pine_tree": [1.2, 3.5, 1.2],
+    "barrel": [0.65, 0.95, 0.65],
 }
 
 
@@ -309,9 +315,6 @@ def build_scene_from_prompt(
                 scene = generate_minimal_scene()
     else:
         print("[MODE] Generative AI mode selected")
-        from blueprint_mapper import map_blueprint_to_scene, merge_blueprint_positions
-        from blueprint_parser import parse_blueprint_or_empty
-
         scene = generate_scene(prompt, mode="ai")
         if not is_valid_scene(scene):
             print("[FALLBACK] AI failed -> using rule-based scene")
@@ -320,26 +323,29 @@ def build_scene_from_prompt(
             print("[FALLBACK] Rule failed -> using minimal scene")
             scene = generate_minimal_scene()
 
-        if blueprint_mode:
-            blueprint_file = Path(blueprint_path)
-            print(f"[BLUEPRINT] Checking file: {blueprint_file.resolve()}")
-            print(f"[BLUEPRINT] File exists: {blueprint_file.exists()}")
-            blueprint_data = parse_blueprint_or_empty(str(blueprint_file), prompt)
-            print(f"[BLUEPRINT] Parsed data: {blueprint_data}")
-            if STRICT_BLUEPRINT_MODE and blueprint_data:
-                blueprint_scene = map_blueprint_to_scene(blueprint_data)
-                scene = blueprint_scene
-                print(f"[BLUEPRINT] Strict blueprint mode enabled. Using blueprint objects only.")
-                print(f"[BLUEPRINT FINAL] placing {len(scene)} objects")
-            elif blueprint_data:
-                blueprint_scene = map_blueprint_to_scene(blueprint_data)
-                scene = merge_blueprint_positions(scene, blueprint_scene)
-                print(f"[BLUEPRINT] Applied blueprint positions: {blueprint_scene}")
-                print(f"[BLUEPRINT FINAL] placing {len(scene)} objects")
-            else:
-                print("[BLUEPRINT] No blueprint data found. Using existing layout flow.")
+    if blueprint_mode and scene_type != "solar_system":
+        from blueprint_mapper import map_blueprint_to_scene, merge_blueprint_positions
+        from blueprint_parser import parse_blueprint_or_empty
+
+        blueprint_file = Path(blueprint_path)
+        print(f"[BLUEPRINT] Checking file: {blueprint_file.resolve()}")
+        print(f"[BLUEPRINT] File exists: {blueprint_file.exists()}")
+        blueprint_data = parse_blueprint_or_empty(str(blueprint_file), prompt)
+        print(f"[BLUEPRINT] Parsed data: {blueprint_data}")
+        if STRICT_BLUEPRINT_MODE and blueprint_data:
+            blueprint_scene = map_blueprint_to_scene(blueprint_data)
+            scene = blueprint_scene
+            print("[BLUEPRINT] Strict blueprint mode enabled. Using blueprint objects only.")
+            print(f"[BLUEPRINT FINAL] placing {len(scene)} objects")
+        elif blueprint_data:
+            blueprint_scene = map_blueprint_to_scene(blueprint_data)
+            scene = merge_blueprint_positions(scene, blueprint_scene)
+            print(f"[BLUEPRINT] Applied blueprint positions: {blueprint_scene}")
+            print(f"[BLUEPRINT FINAL] placing {len(scene)} objects")
         else:
-            print("[BLUEPRINT] Blueprint mode disabled. Ignoring blueprint.png.")
+            print("[BLUEPRINT] No blueprint data found. Using template layout only.")
+    elif blueprint_mode and scene_type == "solar_system":
+        print("[BLUEPRINT] Blueprint not merged for deterministic solar_system scene.")
 
     if not is_valid_scene(scene):
         print("[FALLBACK] Final validation failed -> using minimal scene")
@@ -362,7 +368,10 @@ def build_scene_from_prompt(
     iterations = 0
 
     if selected_mode == "deterministic":
-        print("[MODE] Skipping blueprint overrides, layout engine, and agents.")
+        if blueprint_mode and scene_type != "solar_system" and blueprint_data:
+            print("[MODE] Deterministic: blueprint placement applied; layout engine and agents skipped.")
+        else:
+            print("[MODE] Deterministic: layout engine and agents skipped.")
     elif blueprint_mode and STRICT_BLUEPRINT_MODE and blueprint_data:
         print("[BLUEPRINT] Skipping layout engine and agents in strict blueprint mode.")
     elif not skip_agents:

@@ -1,12 +1,11 @@
 """
 Streamlit UI for SceneForge: blueprint upload, USD generation, metrics, and
 interactive scene exploration with Ollama-backed object explanations.
+
+For a responsive web UI, use the FastAPI backend (api_app.py) + Vite frontend in frontend/.
 """
 
 import os
-import re
-import subprocess
-import sys
 import tempfile
 import urllib.error
 import urllib.request
@@ -15,6 +14,19 @@ from typing import Optional
 import plotly.graph_objects as go
 import streamlit as st
 
+from pipeline_service import (
+    BLUEPRINT_PATH,
+    USD_PATH,
+    extract_explanation,
+    extract_metrics,
+    extract_output_path,
+    open_in_blender,
+    resolve_pipeline_python,
+    run_pipeline,
+    save_blueprint_bytes,
+    score_band,
+    workspace_temp_dir,
+)
 from scene_explainer import (
     SceneObject,
     _ollama_base_url,
@@ -25,12 +37,6 @@ from scene_explainer import (
 
 st.set_page_config(page_title="SceneForge UI", layout="wide")
 
-
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-BLUEPRINT_PATH = os.path.join(PROJECT_ROOT, "blueprint.png")
-USD_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "generated_scene.usda"))
-BLENDER_PATH = r"C:\\Program Files\\Blender Foundation\\Blender 4.0\\blender.exe"
-PREFERRED_PYTHON = r"C:\\Users\\arun1\\omniverse-kit-venv312\\Scripts\\python.exe"
 LOG_KEY = "logs"
 RETURN_CODE_KEY = "return_code"
 LAST_PROMPT_KEY = "last_prompt"
@@ -50,121 +56,11 @@ def _ollama_reachable() -> bool:
 def save_blueprint_file(uploaded_file) -> None:
     if uploaded_file is None:
         return
-    with open(BLUEPRINT_PATH, "wb") as handle:
-        handle.write(uploaded_file.getbuffer())
+    save_blueprint_bytes(uploaded_file.getbuffer())
 
 
-def resolve_pipeline_python():
-    override = os.getenv("SCENEFORGE_PYTHON", "").strip()
-    candidates = [override, PREFERRED_PYTHON, sys.executable]
-    for candidate in candidates:
-        if candidate and os.path.exists(candidate):
-            return os.path.abspath(candidate)
-    return "python"
-
-
-def run_pipeline(prompt, options):
-    pipeline_python = resolve_pipeline_python()
-    cmd = [
-        pipeline_python,
-        "direct_usd_scene.py",
-        "--mode",
-        options["mode"],
-        "--output",
-        options["output_path"],
-    ]
-    if options["use_blueprint"]:
-        cmd.extend(["--blueprint", "--blueprint-path", BLUEPRINT_PATH])
-    if options["prefer_local_assets"]:
-        cmd.append("--prefer-local-assets")
-    if options["disable_cache"]:
-        cmd.append("--disable-cache")
-    if options["disable_objaverse"]:
-        cmd.append("--disable-objaverse")
-    if options["disable_free"]:
-        cmd.append("--disable-free")
-    if options["disable_procedural"]:
-        cmd.append("--disable-procedural")
-    if options["asset_source_order"].strip():
-        cmd.extend(["--asset-source-order", options["asset_source_order"].strip()])
-    if options["objaverse_candidate_limit"] is not None:
-        cmd.extend(["--objaverse-candidate-limit", str(options["objaverse_candidate_limit"])])
-    if options["objaverse_min_score"] is not None:
-        cmd.extend(["--objaverse-min-score", str(options["objaverse_min_score"])])
-    cmd.append(prompt)
-    env = os.environ.copy()
-    env["PYTHONIOENCODING"] = "utf-8"
-    env["PYTHONUTF8"] = "1"
-
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        cwd=PROJECT_ROOT,
-        env=env,
-    )
-
-    stdout, stderr = process.communicate()
-    combined_logs = stdout or ""
-    if stderr:
-        if combined_logs:
-            combined_logs += "\n"
-        combined_logs += stderr
-    return combined_logs, process.returncode, pipeline_python
-
-
-def extract_metrics(logs):
-    match = re.search(
-        r"\[RESULT\] score=([-\d.]+) \| objects=(\d+) \| violations=(\d+) \| iterations=(\d+)",
-        logs,
-    )
-
-    if match:
-        return {
-            "score": float(match.group(1)),
-            "objects": int(match.group(2)),
-            "violations": int(match.group(3)),
-            "iterations": int(match.group(4)),
-        }
-    return None
-
-
-def extract_explanation(logs):
-    lines = logs.splitlines()
-    explanation = []
-    for line in lines:
-        if "[EXPLAIN]" in line or "[DETAIL]" in line:
-            explanation.append(line)
-    return explanation
-
-
-def extract_output_path(logs):
-    path_matches = re.findall(r"\[INFO\] Exported stage path: (.+)", logs)
-    if path_matches:
-        return os.path.abspath(path_matches[-1].strip())
-    matches = re.findall(r"\[INFO\] Exported stage to file: (.+)", logs)
-    if matches:
-        return os.path.abspath(os.path.join(PROJECT_ROOT, matches[-1].strip()))
-    return USD_PATH
-
-
-def open_in_blender(path):
-    if not os.path.exists(BLENDER_PATH):
-        return "Blender not found"
-    if not os.path.exists(path):
-        return "USD file not found"
-
-    subprocess.Popen([BLENDER_PATH, path], cwd=PROJECT_ROOT)
-    return "Opened in Blender"
-
-
-def score_badge(score):
-    if score > 0.7:
-        return "green"
-    if score >= 0.5:
-        return "orange"
-    return "red"
+def score_badge(score: float) -> str:
+    return score_band(score)
 
 
 def _marker_color_for_kind(kind: str) -> str:
@@ -284,6 +180,9 @@ with st.sidebar:
         _ollama_reachable.clear()
         st.rerun()
 
+    st.divider()
+    st.caption("Prefer the new responsive UI? Run `uvicorn api_app:app --reload --port 8765` and open `frontend/` (see frontend/README.md).")
+
 
 if uploaded_file is not None:
     save_blueprint_file(uploaded_file)
@@ -373,7 +272,7 @@ if logs:
             msg = open_in_blender(usd_path)
             st.write(msg)
     with temp_col:
-        st.caption(f"Workspace temp directory: `{tempfile.gettempdir()}`")
+        st.caption(f"Workspace temp directory: `{workspace_temp_dir()}`")
 
     if return_code == 0 and os.path.exists(usd_path):
         st.subheader("Explore scene — Ollama explanations")

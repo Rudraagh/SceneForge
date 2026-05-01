@@ -8,13 +8,14 @@ local Ollama HTTP API.
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List, Optional
 
 
 def _ollama_base_url() -> str:
@@ -74,6 +75,94 @@ def _object_kind_from_prim_name(prim_name: str) -> str:
 
 def _humanize_kind(kind: str) -> str:
     return kind.replace("_", " ").strip().title()
+
+
+def _build_explain_prompt(scene_prompt: str, obj: SceneObject, compact: bool) -> str:
+    if compact:
+        sp = (scene_prompt or "").strip()
+        if len(sp) > 420:
+            sp = sp[:417] + "..."
+        return (
+            f"Scene: {sp}\n"
+            f"Object: {obj.label} (type: {obj.kind}).\n\n"
+            "Give 3 to 5 very short educational facts (one sentence each). "
+            "Separate facts with one blank line. Plain text only, no markdown or bullets."
+        )
+    return (
+        f"The user is viewing a 3D scene described as: {scene_prompt.strip()}\n\n"
+        f"They selected this object: {obj.label} (asset type: {obj.kind}, USD prim: {obj.prim_name}).\n\n"
+        "Write exactly 3 to 5 short educational blurbs. Each blurb is one or two sentences. "
+        "Use plain language. If this is a planet, moon, or the Sun, include accurate general astronomy. "
+        "If it is furniture or architecture, describe its typical role in this kind of scene.\n\n"
+        "Format: one blurb per line, no numbering, no bullet characters, no markdown."
+    )
+
+
+def _is_connection_refused(exc: BaseException) -> bool:
+    """True when Ollama (or any TCP target) refused the connection — common if the daemon is not running."""
+    seen: set[int] = set()
+    cur: BaseException | None = exc
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        if isinstance(cur, ConnectionRefusedError):
+            return True
+        if isinstance(cur, OSError):
+            if cur.errno == errno.ECONNREFUSED:
+                return True
+            # Windows: WSAECONNREFUSED
+            if getattr(cur, "winerror", None) == 10061:
+                return True
+        nxt: BaseException | None = None
+        if isinstance(cur, urllib.error.URLError) and cur.reason is not None:
+            nxt = cur.reason  # type: ignore[assignment]
+        elif cur.__cause__ is not None:
+            nxt = cur.__cause__
+        elif cur.__context__ is not None and not cur.__suppress_context__:
+            nxt = cur.__context__
+        cur = nxt
+    return False
+
+
+def _ollama_unreachable_message(exc: BaseException) -> str:
+    base = _ollama_base_url()
+    if _is_connection_refused(exc):
+        return (
+            f"Cannot reach Ollama at {base} (connection refused). "
+            "The API process could not open a TCP connection — usually Ollama is not running.\n\n"
+            "Fix: start Ollama (open the Ollama app from the Start menu on Windows, or run `ollama serve` in a terminal), "
+            "wait until it is listening, then use **Recheck** in the SceneForge header.\n\n"
+            "If Ollama uses another address, set environment variable OLLAMA_API_URL "
+            "(for example http://127.0.0.1:11434), restart the FastAPI server (uvicorn), and try again."
+        )
+    return f"Ollama request failed: {exc}"
+
+
+def _http_error_detail(exc: urllib.error.HTTPError) -> str:
+    try:
+        raw = exc.read().decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+    raw = raw.strip()
+    if not raw:
+        return ""
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict) and "error" in parsed:
+            return str(parsed["error"])[:600]
+    except json.JSONDecodeError:
+        pass
+    return raw[:600]
+
+
+def _post_ollama_generate(url: str, payload: Dict[str, Any], timeout_s: float) -> Dict[str, Any]:
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=timeout_s) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
 def split_explanation_text(raw: str) -> List[str]:
@@ -163,41 +252,60 @@ def explain_object_in_scene(
 ) -> List[str]:
     """
     Call Ollama once and return 2–5 short explanation steps for display in the UI.
+
+    Uses modest ``options`` (context / max tokens) to reduce HTTP 500 from large models
+    on limited RAM/VRAM. On 500, retries once with a shorter prompt and tighter limits.
     """
     url = _ollama_generate_url()
     model = _resolve_ollama_model(_explain_model_name())
-    user_prompt = (
-        f"The user is viewing a 3D scene described as: {scene_prompt.strip()}\n\n"
-        f"They selected this object: {obj.label} (asset type: {obj.kind}, USD prim: {obj.prim_name}).\n\n"
-        "Write exactly 3 to 5 short educational blurbs. Each blurb is one or two sentences. "
-        "Use plain language. If this is a planet, moon, or the Sun, include accurate general astronomy. "
-        "If it is furniture or architecture, describe its typical role in this kind of scene.\n\n"
-        "Format: one blurb per line, no numbering, no bullet characters, no markdown."
-    )
-    payload = {
-        "model": model,
-        "prompt": user_prompt,
-        "stream": False,
+    installed = ", ".join(_list_installed_ollama_models()) or "(could not list models)"
+
+    def _payload(compact: bool, options: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        p: Dict[str, Any] = {
+            "model": model,
+            "prompt": _build_explain_prompt(scene_prompt, obj, compact=compact),
+            "stream": False,
+        }
+        if options:
+            p["options"] = options
+        return p
+
+    primary_options = {
+        "num_ctx": int(os.getenv("OLLAMA_EXPLAIN_NUM_CTX", "4096")),
+        "num_predict": int(os.getenv("OLLAMA_EXPLAIN_NUM_PREDICT", "512")),
     }
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    fallback_options = {"num_ctx": 2048, "num_predict": 320}
+
+    body: Dict[str, Any]
     try:
-        with urllib.request.urlopen(request, timeout=timeout_s) as response:
-            body = json.loads(response.read().decode("utf-8"))
+        body = _post_ollama_generate(url, _payload(False, primary_options), timeout_s)
     except urllib.error.HTTPError as exc:
-        installed = ", ".join(_list_installed_ollama_models()) or "(could not list models)"
+        detail = _http_error_detail(exc)
         if exc.code == 404:
             raise RuntimeError(
                 f"Ollama HTTP 404 — model `{model}` is often missing. "
                 f"Run: ollama pull {model}   Installed: {installed}"
             ) from exc
-        raise RuntimeError(f"Ollama HTTP {exc.code}: {exc}") from exc
+        if exc.code == 500:
+            try:
+                body = _post_ollama_generate(url, _payload(True, fallback_options), timeout_s)
+            except urllib.error.HTTPError as exc2:
+                detail2 = _http_error_detail(exc2)
+                raise RuntimeError(
+                    "Ollama HTTP 500 while generating the explanation. "
+                    "That usually means the model runner crashed or ran out of memory.\n\n"
+                    f"First error: {detail or '(no message from server)'}\n"
+                    f"Retry error: {detail2 or '(no message)'}\n\n"
+                    "Try: restart Ollama, close other GPU apps, use a smaller model "
+                    "(`setx OLLAMA_EXPLAIN_MODEL mistral:latest` then reopen terminal), "
+                    "or set `OLLAMA_EXPLAIN_NUM_CTX=2048`.\n"
+                    f"Installed models: {installed}"
+                ) from exc2
+        raise RuntimeError(
+            f"Ollama HTTP {exc.code}: {detail or exc.reason or str(exc)}"
+        ) from exc
     except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"Ollama request failed: {exc}") from exc
+        raise RuntimeError(_ollama_unreachable_message(exc)) from exc
 
     raw = (body.get("response") or "").strip()
     if not raw:

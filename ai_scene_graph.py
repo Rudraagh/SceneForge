@@ -79,12 +79,29 @@ def canonicalize_object_name(name: str) -> str:
         "torchlight": "torch",
         "king_chair": "throne",
         "sol": "sun",
+        "water_feature": "barrel",
+        "fountain": "barrel",
     }
     return synonyms.get(key, key)
 
 
 def detect_scene_type(prompt: str) -> str:
     text = prompt.lower()
+    if any(
+        word in text
+        for word in (
+            "courtyard",
+            "patio",
+            "plaza",
+            "atrium",
+            "quad",
+        )
+    ):
+        return "courtyard"
+    if "outdoor" in text and any(
+        w in text for w in ("courtyard", "garden", "park", "bench", "tree", "trees", "fountain", "shade")
+    ):
+        return "courtyard"
     if any(word in text for word in ("classroom", "school", "lecture", "teacher", "desk")):
         return "classroom"
     if any(word in text for word in ("throne", "castle", "royal", "king", "queen", "hall")):
@@ -261,6 +278,13 @@ def _scene_template_objects(scene_type: str) -> List[Dict]:
             {"name": "chair", "position": [1.6, 0.0, 1.5], "rotation": [0.0, 180.0, 0.0], "scale": [1.0, 1.0, 1.0]},
             {"name": "lamp", "position": [-2.0, 0.0, 1.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
             {"name": "bookshelf", "position": [-3.5, 0.0, -2.0], "rotation": [0.0, 90.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+        ],
+        "courtyard": [
+            {"name": "bench", "position": [-4.0, 0.0, 0.0], "rotation": [0.0, 90.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+            {"name": "bench", "position": [4.0, 0.0, 0.0], "rotation": [0.0, 90.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+            {"name": "pine_tree", "position": [6.5, 0.0, -2.5], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+            {"name": "pine_tree", "position": [7.0, 0.0, 2.0], "rotation": [0.0, 22.0, 0.0], "scale": [1.0, 1.0, 1.0]},
+            {"name": "barrel", "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0]},
         ],
     }
     return [dict(item) for item in templates.get(scene_type, templates["studio"])]

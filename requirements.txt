@@ -5,3 +5,7 @@ numpy
 trimesh
 plotly
 usd-core
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic

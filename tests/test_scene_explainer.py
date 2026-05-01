@@ -7,9 +7,11 @@ from __future__ import annotations
 import importlib.util
 import json
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from ai_scene_graph import detect_scene_type
 from scene_explainer import (
     SceneObject,
     explain_object_in_scene,
@@ -18,6 +20,16 @@ from scene_explainer import (
 )
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "minimal_world_scene.usda"
+
+
+class TestDetectSceneType(unittest.TestCase):
+    def test_courtyard_prompts(self):
+        self.assertEqual(
+            detect_scene_type("outdoor courtyard with stone benches and a fountain"),
+            "courtyard",
+        )
+        self.assertEqual(detect_scene_type("A quiet patio with trees"), "courtyard")
+        self.assertEqual(detect_scene_type("indoor studio with a table"), "studio")
 
 
 class TestSplitExplanation(unittest.TestCase):
@@ -94,6 +106,23 @@ class TestExplainObjectMocked(unittest.TestCase):
         )
         steps = explain_object_in_scene("a forest camp with trees and a campfire", obj)
         self.assertGreaterEqual(len(steps), 2)
+
+    @patch("scene_explainer.urllib.request.urlopen")
+    def test_connection_refused_friendly_message(self, mock_urlopen):
+        mock_urlopen.side_effect = urllib.error.URLError(ConnectionRefusedError())
+        obj = SceneObject(
+            prim_path="/World/wooden_desk_1",
+            prim_name="wooden_desk_1",
+            kind="wooden_desk",
+            label="Wooden Desk",
+            position=(0.0, 0.0, 0.0),
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            explain_object_in_scene("a classroom", obj)
+        msg = str(ctx.exception)
+        self.assertIn("Cannot reach Ollama", msg)
+        self.assertIn("ollama serve", msg.lower())
+        self.assertIn("OLLAMA_API_URL", msg)
 
 
 @unittest.skipUnless(FIXTURE.is_file(), "fixture missing")

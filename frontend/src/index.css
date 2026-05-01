@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased min-h-screen;
+}
+
+.scene-noise-light {
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Light dot grid + diagonal rhythm behind marketing / studio */
+.scene-depth-grid {
+  background-image: radial-gradient(circle at center, rgba(12, 12, 12, 0.055) 1px, transparent 1.1px);
+  background-size: 26px 26px;
+}
+
+.scene-diagonal-lines {
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 38px,
+    rgba(12, 12, 12, 0.028) 38px,
+    rgba(12, 12, 12, 0.028) 39px
+  );
+}
+
+.plot-shell .js-plotly-plot,
+.plot-shell .plot-container {
+  width: 100% !important;
+}
+
+@layer base {
+  ::selection {
+    @apply bg-neon/50 text-ink;
+  }
+}

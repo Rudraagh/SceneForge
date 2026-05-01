@@ -11,3 +11,7 @@ venv/
 blueprint.png
 generated_scene.usda
 generated_scene_flat_*.usda
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+_smoke_*.usda
