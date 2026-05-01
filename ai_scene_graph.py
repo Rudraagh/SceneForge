@@ -337,6 +337,51 @@ def score_layout(scene: List[Dict]) -> float:
     return max(0.0, round(score, 3))
 
 
+def classify_scene(prompt: str) -> tuple[str, str]:
+    """
+    Scene type plus a coarse pipeline label consumed by direct_usd_scene.py.
+
+    ``direct_usd_scene`` forces ``deterministic`` when ``--mode rule``; otherwise
+    it expects a non-deterministic label (here: ``generative``) for the AI path.
+    """
+    scene_type = detect_scene_type(prompt or "")
+    return scene_type, "generative"
+
+
+def is_valid_scene(scene: List[Dict]) -> bool:
+    if not scene or not isinstance(scene, list):
+        return False
+    for item in scene:
+        if not isinstance(item, dict):
+            return False
+        if "name" not in item or "position" not in item:
+            return False
+        pos = item["position"]
+        if not isinstance(pos, (list, tuple)) or len(pos) < 3:
+            return False
+    return True
+
+
+def generate_minimal_scene() -> List[Dict]:
+    """Tiny safe layout when rule/AI outputs are unusable."""
+    return _apply_scene_constraints(_scene_template_objects("studio"))
+
+
+def generate_solar_system_scene() -> tuple[List[Dict], List[tuple[str, str, str]]]:
+    """
+    Deterministic solar system template plus simple ``orbits`` edges for the graph.
+    """
+    scene = _apply_scene_constraints(_scene_template_objects("solar_system"))
+    relations: List[tuple[str, str, str]] = []
+    sun_name = canonicalize_object_name("sun")
+    for item in scene:
+        name = str(item.get("name", "")).strip()
+        if not name or canonicalize_object_name(name) == sun_name:
+            continue
+        relations.append((canonicalize_object_name(name), "orbits", sun_name))
+    return scene, relations
+
+
 def generate_rule_scene(prompt: str) -> List[Dict]:
     scene_type = detect_scene_type(prompt)
     return _apply_scene_constraints(_scene_template_objects(scene_type))
