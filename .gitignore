@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.venv/
+venv/
+.env
+*.usda.bak
+# Local run outputs (regenerate with the app or CLI)
+blueprint.png
+generated_scene.usda
+generated_scene_flat_*.usda

@@ -3,3 +3,5 @@ Pillow
 matplotlib
 numpy
 trimesh
+plotly
+usd-core
