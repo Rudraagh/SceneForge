@@ -1,19 +1,11 @@
-from ai_scene_graph import canonicalize_object_name
+"""Backward-compatible inferred relation facade."""
+
+from __future__ import annotations
+
+from sceneforge.relations import infer_relations as infer_structured_relations, legacy_relation_tuples
 
 
 def infer_relations(prompt: str):
-    normalized = prompt.strip().lower()
+    """Return legacy inferred relation tuples."""
 
-    if "solar system" in normalized:
-        planets = ["mercury", "venus", "earth", "mars"]
-
-        return [
-            (
-                canonicalize_object_name(p),
-                "orbits",
-                canonicalize_object_name("sun"),
-            )
-            for p in planets
-        ]
-
-    return []
+    return legacy_relation_tuples(infer_structured_relations(prompt))

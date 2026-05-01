@@ -21,6 +21,8 @@ from pxr import Gf, Sdf, Usd, UsdGeom
 
 from ai_scene_graph import (
     classify_scene,
+    detect_scene_type,
+    enrich_graph_with_relations,
     generate_minimal_scene,
     generate_rule_scene,
     generate_scene,
@@ -28,10 +30,12 @@ from ai_scene_graph import (
     is_valid_scene,
     score_layout,
 )
-from objaverse_loader import find_asset
+from sceneforge.asset_registry import find_asset
+from sceneforge.config import get_config
+from sceneforge.logging_utils import configure_logging
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = get_config().project_root
 DEFAULT_REFERENCE_SCALE = 0.3
 GROUND_EPSILON = 0.02
 STRICT_BLUEPRINT_MODE = True
@@ -300,28 +304,36 @@ def build_scene_from_prompt(
     blueprint_data = []
     skip_agents = False
 
+    actual_generation_mode = selected_mode
+
     if selected_mode == "deterministic":
         print("[MODE] Deterministic mode selected")
         skip_agents = True
         if scene_type == "solar_system":
             print("[INFO] Using deterministic solar system generator")
             scene, solar_relations = generate_solar_system_scene()
+            actual_generation_mode = "deterministic-solar-system"
             print(f"[SOLAR] planets placed: {len(scene)}")
             print("[SOLAR] deterministic layout used")
         else:
             scene = generate_rule_scene(prompt)
+            actual_generation_mode = "deterministic"
             if not is_valid_scene(scene):
                 print("[FALLBACK] Rule failed -> using minimal scene")
                 scene = generate_minimal_scene()
+                actual_generation_mode = "minimal-fallback"
     else:
         print("[MODE] Generative AI mode selected")
         scene = generate_scene(prompt, mode="ai")
+        actual_generation_mode = "ai"
         if not is_valid_scene(scene):
             print("[FALLBACK] AI failed -> using rule-based scene")
             scene = generate_rule_scene(prompt)
+            actual_generation_mode = "rule-fallback"
         if not is_valid_scene(scene):
             print("[FALLBACK] Rule failed -> using minimal scene")
             scene = generate_minimal_scene()
+            actual_generation_mode = "minimal-fallback"
 
     if blueprint_mode and scene_type != "solar_system":
         from blueprint_mapper import map_blueprint_to_scene, merge_blueprint_positions
@@ -352,18 +364,10 @@ def build_scene_from_prompt(
         scene = generate_minimal_scene()
     print(f"[OBJECTS] count={len(scene)}")
 
-    from relations import extract_relations
-    from relation_infer import infer_relations
     from ai_scene_graph import build_graph
 
-    relations = list(solar_relations)
-    if not relations:
-        relations = extract_relations(prompt)
-
-    if not relations:
-        relations = infer_relations(prompt)
-
-    graph = build_graph(scene, relations)
+    graph = build_graph(scene, list(solar_relations))
+    graph = enrich_graph_with_relations(graph, prompt, list(solar_relations))
     final_score = score_layout(graph.get("nodes", []))
     iterations = 0
 
@@ -396,7 +400,7 @@ def build_scene_from_prompt(
                 break
 
     violations = _count_spacing_violations(graph.get("nodes", []))
-    _print_run_summary(graph, final_score, violations, iterations, selected_mode)
+    _print_run_summary(graph, final_score, violations, iterations, actual_generation_mode)
 
     if scene_type == "solar_system":
         add_solar_system_guides(stage, graph)
@@ -521,6 +525,7 @@ def apply_asset_env(args: argparse.Namespace) -> None:
 
 
 def main() -> int:
+    configure_logging()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if hasattr(sys.stderr, "reconfigure"):

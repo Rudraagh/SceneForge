@@ -11,6 +11,8 @@ from __future__ import annotations
 import math
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from sceneforge.layout import prevent_overlaps
+
 
 DESK_KEYWORDS = ("desk", "table")
 CHAIR_KEYWORDS = ("chair",)
@@ -98,6 +100,7 @@ def arrange_classroom_layout(
     _place_boards(boards, ordered_desks, room_margin=room_margin)
     _store_room_metadata(graph, room_margin=room_margin)
     _tag_layout_edges(graph, ordered_desks, chairs)
+    prevent_overlaps(graph, min_spacing=0.95)
     return graph
 
 

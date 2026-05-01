@@ -17,8 +17,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from scene_explainer import SceneObject, list_scene_objects
+from sceneforge.config import get_config
+from sceneforge.logging_utils import configure_logging
 
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+CONFIG = get_config()
+PROJECT_ROOT = str(CONFIG.project_root)
 BLUEPRINT_PATH = os.path.join(PROJECT_ROOT, "blueprint.png")
 USD_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "generated_scene.usda"))
 BLENDER_PATH = os.environ.get(
@@ -41,6 +44,7 @@ def resolve_pipeline_python() -> str:
 
 
 def run_pipeline(prompt: str, options: Dict[str, Any]) -> Tuple[str, int, str]:
+    configure_logging()
     pipeline_python = resolve_pipeline_python()
     cmd = [
         pipeline_python,
@@ -80,6 +84,8 @@ def run_pipeline(prompt: str, options: Dict[str, Any]) -> Tuple[str, int, str]:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         cwd=PROJECT_ROOT,
         env=env,
     )
@@ -118,6 +124,18 @@ def extract_output_path(logs: str) -> str:
     if matches:
         return os.path.abspath(os.path.join(PROJECT_ROOT, matches[-1].strip()))
     return USD_PATH
+
+
+def resolve_output_path_from_options(options: Dict[str, Any]) -> str:
+    """Resolve the intended output USDA path directly from pipeline options."""
+
+    requested = str(options.get("output_path", "") or "").strip()
+    if not requested:
+        return USD_PATH
+    path = Path(requested)
+    if not path.is_absolute():
+        path = Path(PROJECT_ROOT) / path
+    return str(path.resolve())
 
 
 def save_blueprint_bytes(data: bytes) -> None:

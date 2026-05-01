@@ -31,6 +31,8 @@ export type GenerateResponse = {
   pipeline_python: string;
   blueprint_path: string;
   temp_dir: string;
+  objects?: SceneObjectDTO[];
+  objects_error?: string | null;
 };
 
 export async function postGenerate(body: GeneratePayload): Promise<GenerateResponse> {
@@ -112,4 +114,8 @@ export async function postOpenBlender(path: string): Promise<{ message: string }
   });
   if (!r.ok) throw new Error("open-blender failed");
   return json(r);
+}
+
+export function downloadUsdUrl(usdPath: string): string {
+  return `/api/download-usd?usd_path=${encodeURIComponent(usdPath)}`;
 }

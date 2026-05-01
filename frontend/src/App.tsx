@@ -6,6 +6,7 @@ const Plot = lazy(async () => {
   return { default: mod.default };
 });
 import {
+  downloadUsdUrl,
   getOllamaStatus,
   getPipelinePython,
   getSceneObjects,
@@ -140,9 +141,15 @@ export default function App() {
       setResult(res);
       setScenePrompt(prompt.trim());
       if (res.return_code === 0 && res.usd_exists) {
-        const objs = await getSceneObjects(res.usd_path);
-        setObjects(objs);
-        if (objs.length) setSelectedPath(objs[0].prim_path);
+        const responseObjects = res.objects ?? [];
+        if (responseObjects.length) {
+          setObjects(responseObjects);
+          setSelectedPath(responseObjects[0].prim_path);
+        } else {
+          const objs = await getSceneObjects(res.usd_path);
+          setObjects(objs);
+          if (objs.length) setSelectedPath(objs[0].prim_path);
+        }
       }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -633,6 +640,14 @@ export default function App() {
                   </section>
 
                   <div className="flex flex-wrap items-center gap-3">
+                    <a
+                      href={result.usd_exists ? downloadUsdUrl(result.usd_path) : undefined}
+                      className={`inline-flex items-center gap-2 rounded-xl border border-ink/12 bg-white/90 px-4 py-2.5 text-sm font-medium text-ink shadow-sm transition duration-200 hover:scale-[1.02] hover:bg-white active:scale-[0.98] ${
+                        result.usd_exists ? "" : "pointer-events-none opacity-40"
+                      }`}
+                    >
+                      Download USDA
+                    </a>
                     <button
                       type="button"
                       disabled={!result.usd_exists}
@@ -645,6 +660,21 @@ export default function App() {
                       Temp: <code className="text-ink-soft">{result.temp_dir}</code>
                     </span>
                   </div>
+
+                  {result.objects_error ? (
+                    <div
+                      role="alert"
+                      className="rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm"
+                    >
+                      Scene generated, but the object explorer could not load: {result.objects_error}
+                    </div>
+                  ) : null}
+
+                  {result.return_code === 0 && result.usd_exists && !plotData ? (
+                    <div className="rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-sm text-ink-soft shadow-sm">
+                      Scene exported successfully, but no scene objects were returned for the explorer.
+                    </div>
+                  ) : null}
 
                   {result.return_code === 0 && result.usd_exists && plotData && (
                     <section className="overflow-hidden rounded-3xl border border-ink/10 bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:p-5">

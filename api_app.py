@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 import base64
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -26,6 +27,7 @@ from pipeline_service import (
     list_scene_objects_resolved,
     open_in_blender,
     resolve_pipeline_python,
+    resolve_output_path_from_options,
     run_pipeline,
     save_blueprint_bytes,
     workspace_temp_dir,
@@ -135,17 +137,39 @@ def generate(data: GenerateRequest) -> Dict[str, Any]:
         )
 
     logs, code, py = run_pipeline(data.prompt.strip(), opts)
-    usd = extract_output_path(logs)
+    usd_from_logs = extract_output_path(logs)
+    resolved_output = resolve_output_path_from_options(opts)
+    usd = usd_from_logs if os.path.exists(usd_from_logs) else resolved_output
+    usd_exists = os.path.exists(usd)
+    objects: List[Dict[str, Any]] = []
+    objects_error: Optional[str] = None
+    if code == 0 and usd_exists:
+        try:
+            scene_objects = list_scene_objects_resolved(usd)
+            objects = [
+                {
+                    "prim_path": o.prim_path,
+                    "prim_name": o.prim_name,
+                    "kind": o.kind,
+                    "label": o.label,
+                    "position": list(o.position),
+                }
+                for o in scene_objects
+            ]
+        except RuntimeError as exc:
+            objects_error = str(exc)
     return {
         "return_code": code,
         "logs": logs,
         "metrics": extract_metrics(logs),
         "explanation_lines": extract_explanation(logs),
         "usd_path": usd,
-        "usd_exists": os.path.exists(usd),
+        "usd_exists": usd_exists,
         "pipeline_python": py,
         "blueprint_path": BLUEPRINT_PATH,
         "temp_dir": workspace_temp_dir(),
+        "objects": objects,
+        "objects_error": objects_error,
     }
 
 
@@ -192,3 +216,11 @@ def explain_object(req: ExplainRequest) -> Dict[str, Any]:
 def blender_open(req: BlenderRequest) -> Dict[str, str]:
     msg = open_in_blender(os.path.abspath(req.path))
     return {"message": msg}
+
+
+@app.get("/api/download-usd")
+def download_usd(usd_path: str) -> FileResponse:
+    path = os.path.abspath(usd_path)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="USD file not found")
+    return FileResponse(path=path, filename=os.path.basename(path), media_type="text/plain")

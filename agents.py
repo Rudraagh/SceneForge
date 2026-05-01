@@ -65,6 +65,16 @@ def domain_agent(graph):
             pos1[0] = pos2[0]
             pos1[2] = pos2[2]
 
+        elif relation == "under":
+            pos1[0] = pos2[0]
+            pos1[2] = pos2[2]
+            pos1[1] = pos2[1] - 0.8
+
+        elif relation == "inside":
+            pos1[0] = pos2[0]
+            pos1[1] = pos2[1]
+            pos1[2] = pos2[2]
+
         elif relation == "near":
             dx = pos2[0] - pos1[0]
             dz = pos2[2] - pos1[2]
@@ -81,6 +91,18 @@ def domain_agent(graph):
                 pos1[2] = pos2[2] + target
                 rotation = obj1.setdefault("rotation", [0.0, 0.0, 0.0])
                 rotation[1] = 180.0
+
+        elif relation == "facing":
+            dx = pos2[0] - pos1[0]
+            dz = pos2[2] - pos1[2]
+            rotation = obj1.setdefault("rotation", [0.0, 0.0, 0.0])
+            rotation[1] = math.degrees(math.atan2(dx, dz))
+
+        elif relation == "aligned_with":
+            pos1[2] = pos2[2]
+            rotation = obj1.setdefault("rotation", [0.0, 0.0, 0.0])
+            rotation2 = obj2.setdefault("rotation", [0.0, 0.0, 0.0])
+            rotation[1] = rotation2[1]
 
     return graph
 

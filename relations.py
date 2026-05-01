@@ -1,25 +1,12 @@
-import re
-from ai_scene_graph import canonicalize_object_name
+"""Backward-compatible relation extraction facade."""
 
-RELATIONS = ("on", "beside", "near")
-ARTICLE_PATTERN = r"(?:a|an|the)"
-STOP_WORDS = "|".join((*RELATIONS, "and", "or"))
-OBJECT_PATTERN = (
-    rf"((?!(?:{STOP_WORDS})\b)[a-z][a-z0-9_-]*(?:\s+(?!(?:{STOP_WORDS})\b)[a-z][a-z0-9_-]*)?)"
-)
+from __future__ import annotations
+
+from sceneforge.relations import legacy_relation_tuples, parse_relations
 
 
 def extract_relations(prompt: str):
-    text = prompt.lower()
-    results = []
+    """Return legacy `(from, relation, to)` tuples from structured parsing."""
 
-    for relation in RELATIONS:
-        pattern = re.compile(
-            rf"\b{ARTICLE_PATTERN}\s+{OBJECT_PATTERN}\s+{relation}\s+{ARTICLE_PATTERN}\s+{OBJECT_PATTERN}\b"
-        )
-        for match in pattern.finditer(text):
-            obj1 = canonicalize_object_name(match.group(1).strip())
-            obj2 = canonicalize_object_name(match.group(2).strip())
-            results.append((obj1, relation, obj2))
+    return legacy_relation_tuples(parse_relations(prompt))
 
-    return list(set(results))

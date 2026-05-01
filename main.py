@@ -23,12 +23,15 @@ import urllib.request
 from pathlib import Path
 
 from pxr import Usd
+from sceneforge.config import get_config
+from sceneforge.logging_utils import configure_logging
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-OLLAMA_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("SCENE_GRAPH_OLLAMA_MODEL", "llama3.2:1b")
-DEFAULT_PROMPT = "a medieval classroom with wooden desks"
+CONFIG = get_config()
+PROJECT_ROOT = CONFIG.project_root
+OLLAMA_URL = CONFIG.ollama_base_url
+OLLAMA_MODEL = CONFIG.scene_graph_model
+DEFAULT_PROMPT = CONFIG.default_prompt
 
 
 def check_ollama_server() -> None:
@@ -142,6 +145,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    configure_logging()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if hasattr(sys.stderr, "reconfigure"):
