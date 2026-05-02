@@ -132,7 +132,7 @@ def build_few_shot_prompt(prompt: str) -> str:
             + json.dumps(example["objects"], indent=2)
         )
     common_assets = ", ".join(sorted(supported_assets()))
-    return (
+    core = (
         "You generate 3D scene graphs. Return only a JSON array.\n"
         "Each item must be an object with exactly these keys: name, position, rotation, scale.\n"
         "position must be [x, y, z], rotation must be [rx, ry, rz], scale must be [sx, sy, sz].\n"
@@ -143,6 +143,16 @@ def build_few_shot_prompt(prompt: str) -> str:
         + "\n\n".join(blocks)
         + f"\n\nPrompt: {prompt}\nJSON:\n"
     )
+    try:
+        from sceneforge.rag import rag_globally_disabled, retrieved_context_block
+
+        if not rag_globally_disabled():
+            ctx = retrieved_context_block(prompt).strip()
+            if ctx:
+                return ctx + "\n\n" + core
+    except Exception as exc:
+        LOGGER.debug("RAG augment skipped for scene prompt: %s", exc)
+    return core
 
 
 def _scene_template_objects(scene_type: str) -> List[Dict]:

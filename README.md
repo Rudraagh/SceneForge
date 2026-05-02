@@ -468,6 +468,12 @@ UI flow:
   - default: `llama3.2:1b`
   - local Ollama model name used for scene graph generation
 
+- **RAG (retrieval before Ollama)** — `sceneforge/rag.py` embeds `scene_dataset.json`, `sceneforge/asset_registry.py` entries, and `rag_corpus/sceneforge_rag.md`, then prepends top matches to **AI scene-graph** prompts (`build_few_shot_prompt`) and **prim explanations** (`scene_explainer`). Pull an embedding model first, e.g. `ollama pull nomic-embed-text`.
+  - `OLLAMA_EMBED_MODEL` — default `nomic-embed-text`
+  - `SCENEFORGE_RAG_TOP_K` — default `4`
+  - `SCENEFORGE_RAG_EMBED_TIMEOUT_S` — default `20` (seconds per embedding HTTP call)
+  - `SCENEFORGE_DISABLE_RAG` — set to `1` to turn retrieval off (CI/tests or when no embed model is installed)
+
 - `OPEN_VIEWER`
   - default: `1`
   - set to `0` to skip auto-opening the preview window

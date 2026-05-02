@@ -52,7 +52,7 @@ function HeroWireArt() {
 
 export function MarketingHero({ onStart }: { onStart: () => void }) {
   return (
-    <section className="relative overflow-hidden border-b border-ink/10">
+    <section className="sf-hero-edge relative overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:pb-20 sm:pt-16 md:px-6 lg:px-8">
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,0.95fr)] lg:gap-12 xl:gap-16">
           <div className="flex w-full max-w-xl flex-col items-center text-center lg:max-w-none lg:items-start lg:text-left">
@@ -128,7 +128,7 @@ export function PlatformCapabilitiesSection() {
     },
   ];
   return (
-    <section id="capabilities" className="scroll-mt-24 border-b border-ink/10 bg-canvas py-14 sm:py-16">
+    <section id="capabilities" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">What the platform delivers</h2>
@@ -160,7 +160,7 @@ export function ArchitectureStackSection() {
     { label: "Visualization", detail: "Plotly 3D prim picker aligned with USD paths for classroom walkthroughs." },
   ];
   return (
-    <section id="architecture" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="architecture" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Architecture & stack</h2>
@@ -194,7 +194,7 @@ export function ArchitectureStackSection() {
 export function InteroperabilitySection() {
   const chips = ["USDA / USD", "Blender", "FastAPI", "Vite + React", "Plotly", "Ollama (local)", "Streamlit (legacy UI)"];
   return (
-    <section id="interop" className="scroll-mt-24 border-b border-ink/10 bg-canvas py-14 sm:py-16">
+    <section id="interop" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Interoperability & operations</h2>
@@ -241,7 +241,7 @@ export function ResearchUseCasesSection() {
     },
   ];
   return (
-    <section id="research" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="research" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Research & teaching scenarios</h2>
@@ -270,7 +270,7 @@ export function ObservabilitySection() {
     "3D prim picker binds to concrete USD paths so explanations and manual edits target the same identifiers.",
   ];
   return (
-    <section id="observability" className="scroll-mt-24 border-b border-ink/10 bg-canvas py-14 sm:py-16">
+    <section id="observability" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Observability & review signals</h2>
@@ -327,7 +327,7 @@ export function PositioningSection() {
     },
   ];
   return (
-    <section id="positioning" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="positioning" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <p className="font-display text-xs font-semibold uppercase tracking-widest text-ink-faint">When to reach for it</p>
@@ -369,43 +369,109 @@ export function PositioningSection() {
 }
 
 export function SamplePromptsSection() {
-  const samples: { prompt: string; hint: "prompt" | "blueprint"; label: string }[] = [
-    { prompt: "a medieval classroom with wooden desks and a blackboard", hint: "prompt", label: "Prompt only" },
+  const samples: { id: string; prompt: string; hint: "prompt" | "blueprint"; label: string }[] = [
+    { id: "p1", prompt: "a medieval classroom with wooden desks and a blackboard", hint: "prompt", label: "Prompt only" },
     {
-      prompt: "open-plan studio with drafting table, bookshelf, and north-facing windows along one wall",
+      id: "b1",
+      prompt:
+        "open-plan studio with drafting table, bookshelf, and north-facing windows along one wall; align colored regions on the blueprint to desk, chair, shelf, and lamp zones",
       hint: "blueprint",
       label: "Best with blueprint",
     },
-    { prompt: "minimal solar system with labeled planets in stable orbits", hint: "prompt", label: "Prompt only" },
+    { id: "p2", prompt: "minimal solar system with labeled planets in stable orbits", hint: "prompt", label: "Prompt only" },
     {
-      prompt: "single-story home: living room adjoining kitchen; use color-coded zones on the blueprint for each room",
+      id: "b2",
+      prompt:
+        "single-story home: living room adjoining kitchen; use brown desk zones, blue chair blobs, and green board areas on the blueprint PNG for each room",
       hint: "blueprint",
       label: "Best with blueprint",
     },
     {
+      id: "p3",
       prompt: "outdoor courtyard with stone benches, a central fountain, and shaded trees along the eastern edge",
       hint: "prompt",
       label: "Prompt only",
     },
     {
-      prompt: "small lecture hall: instructor desk near the board, rows of student desks facing forward, rear exit door",
+      id: "b3",
+      prompt:
+        "small lecture hall: instructor desk near the board, rows of student desks facing forward, rear exit door; paint blueprint regions to match desk, chair, blackboard, and lamp colors from the legend",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p4", prompt: "a royal throne room with banners and torches", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b4",
+      prompt:
+        "L-shaped office: executive desk in the corner nook, two visitor chairs opposite, floor lamp by the window wall; map blueprint fills to desk, chair, and lamp palette colors",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p5", prompt: "a forest camp with trees, crates and a campfire", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b5",
+      prompt:
+        "cafeteria row: long serving counter on the north wall, parallel bench seating, trash barrels at each end; color the blueprint so counters read as desks and seats as chairs",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p6", prompt: "a medieval market with vendor stalls and barrels", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b6",
+      prompt:
+        "library reading room: central study tables, perimeter bookshelves, soft lamps in corners; upload blueprint.png with shelf-green blocks along walls and desk-brown islands in the middle",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p7", prompt: "a cozy tavern with tables, chairs and torches", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b7",
+      prompt:
+        "gallery walk: art panels on east and west walls, benches centered in the aisle, spot lamps overhead; east wall = green board regions, aisle = brown desk blobs, benches = blue chairs on blueprint",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p8", prompt: "an outdoor basketball court with hoops and benches along the sidelines", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b8",
+      prompt:
+        "dual classroom: shared wall with two blackboards back-to-back, mirrored desk rows on each side; split the blueprint left/right with symmetric desk (brown), chair (blue), and board (green) regions",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p9", prompt: "a quiet patio with potted plants, string lights, and a small round table", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b9",
+      prompt:
+        "retail pop-up: checkout counter at the front, product crates mid-floor, banner stand by the entrance; mark counter as desk-brown, crates as barrel-like fills, banner strip at top of blueprint",
+      hint: "blueprint",
+      label: "Best with blueprint",
+    },
+    { id: "p10", prompt: "a solar system with the sun and planets in order from Mercury to Neptune", hint: "prompt", label: "Prompt only" },
+    {
+      id: "b10",
+      prompt:
+        "training lab: U-shaped desk arrangement facing a demonstration board, storage shelves behind the instructor; curved U of brown desk regions with blue chair dots and a wide green board band on blueprint",
       hint: "blueprint",
       label: "Best with blueprint",
     },
   ];
   return (
-    <section id="sample-prompts" className="scroll-mt-24 border-b border-ink/10 bg-canvas py-14 sm:py-16">
+    <section id="sample-prompts" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Sample prompts</h2>
           <p className="mt-2 text-sm text-ink-soft sm:text-base">
             Copy a line into the studio as a starting point. Blueprint-tagged ideas work best when your PNG regions line up with the color legend the pipeline expects.
+            Ready-made PNGs for prompts tagged “Best with blueprint” live in{" "}
+            <code className="rounded bg-canvas-muted px-1.5 py-0.5 text-xs text-ink">examples/blueprints/</code>{" "}
+            (see <code className="rounded bg-canvas-muted px-1.5 py-0.5 text-xs text-ink">examples/blueprints/README.md</code> for which file matches which card).
           </p>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
           {samples.map((s) => (
             <article
-              key={s.prompt}
+              key={s.id}
               className="flex flex-col rounded-2xl border border-ink/10 bg-white/65 p-4 shadow-sm backdrop-blur-sm transition hover:border-ink/18 hover:shadow-md sm:p-5"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -437,7 +503,7 @@ export function RequirementsSection() {
     { k: "Disk", v: "Reserve several GB for normalized caches and remote asset downloads when Objaverse or free sources are enabled." },
   ];
   return (
-    <section id="requirements" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="requirements" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Requirements</h2>
@@ -518,7 +584,7 @@ export function PrivacyDataFlowSection() {
     },
   ];
   return (
-    <section id="privacy" className="scroll-mt-24 border-b border-ink/10 bg-canvas py-14 sm:py-16">
+    <section id="privacy" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Privacy & data flow</h2>
@@ -532,7 +598,7 @@ export function PrivacyDataFlowSection() {
               key={lane.title}
               className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white/65 p-5 shadow-sm sm:p-6"
             >
-              <div className="absolute right-3 top-3 font-display text-4xl font-bold leading-none text-neon/20 sm:right-4 sm:top-4 sm:text-5xl">
+              <div className="absolute right-3 top-3 font-display text-4xl font-bold leading-none text-[rgba(62,100,168,0.58)] sm:right-4 sm:top-4 sm:text-5xl">
                 {i + 1}
               </div>
               <h3 className="relative max-w-[88%] font-display text-base font-semibold text-ink sm:text-lg">{lane.title}</h3>
@@ -569,7 +635,7 @@ export function FAQSection() {
     },
   ];
   return (
-    <section id="faq" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="faq" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">FAQ</h2>
@@ -641,7 +707,7 @@ export function QuickStartSection() {
     },
   ];
   return (
-    <section id="quick-start" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="quick-start" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Run locally in four steps</h2>
@@ -699,7 +765,7 @@ const steps = [
 
 export function WorkflowSection() {
   return (
-    <section id="workflow" className="scroll-mt-24 border-b border-ink/10 bg-white/40 py-14 backdrop-blur-[2px] sm:py-16">
+    <section id="workflow" className="sf-section-glass scroll-mt-24 py-14 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center motion-safe:animate-fadeInUp md:mx-0 md:max-w-none md:text-left">
           <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">End-to-end workflow</h2>
@@ -729,7 +795,7 @@ export function WorkflowSection() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-ink/10 bg-canvas py-10 motion-safe:animate-fadeInUp">
+    <footer className="sf-footer-glass py-10 motion-safe:animate-fadeInUp">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 md:flex-row md:items-center md:justify-between md:px-6 lg:px-8">
         <div>
           <p className="font-display text-lg font-semibold text-ink">SceneForge</p>

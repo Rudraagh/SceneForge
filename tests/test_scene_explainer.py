@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import unittest
 import urllib.error
 from pathlib import Path
@@ -45,6 +46,7 @@ class TestSplitExplanation(unittest.TestCase):
         self.assertGreaterEqual(len(steps), 2)
 
 
+@patch.dict(os.environ, {"SCENEFORGE_DISABLE_RAG": "1"}, clear=False)
 class TestExplainObjectMocked(unittest.TestCase):
     """Three scene families: classroom, solar system, forest — Ollama HTTP mocked."""
 

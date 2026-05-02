@@ -32,6 +32,40 @@ body {
   );
 }
 
+/* Translucent marketing / footer surfaces so the pastel SceneBackdrop shows through */
+.sf-section-glass {
+  border-bottom: 1px solid rgba(100, 120, 170, 0.14);
+  background: linear-gradient(
+    168deg,
+    rgba(252, 253, 255, 0.42) 0%,
+    rgba(214, 228, 252, 0.38) 48%,
+    rgba(244, 234, 250, 0.36) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.sf-hero-edge {
+  border-bottom: 1px solid rgba(100, 120, 170, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(228, 236, 252, 0.22) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sf-footer-glass {
+  border-top: 1px solid rgba(100, 120, 170, 0.14);
+  background: linear-gradient(0deg, rgba(236, 244, 255, 0.48) 0%, rgba(248, 238, 252, 0.38) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sf-studio-glass {
+  border-bottom: 1px solid rgba(100, 120, 170, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(222, 234, 252, 0.28) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .plot-shell .js-plotly-plot,
 .plot-shell .plot-container {
   width: 100% !important;

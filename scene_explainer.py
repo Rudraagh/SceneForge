@@ -77,18 +77,28 @@ def _humanize_kind(kind: str) -> str:
     return kind.replace("_", " ").strip().title()
 
 
-def _build_explain_prompt(scene_prompt: str, obj: SceneObject, compact: bool) -> str:
+def _build_explain_prompt(
+    scene_prompt: str,
+    obj: SceneObject,
+    compact: bool,
+    rag_context: str = "",
+) -> str:
+    prefix = (rag_context or "").strip()
+    if prefix:
+        prefix = prefix + "\n\n"
+
     if compact:
         sp = (scene_prompt or "").strip()
         if len(sp) > 420:
             sp = sp[:417] + "..."
-        return (
+        body = (
             f"Scene: {sp}\n"
             f"Object: {obj.label} (type: {obj.kind}).\n\n"
             "Give 3 to 5 very short educational facts (one sentence each). "
             "Separate facts with one blank line. Plain text only, no markdown or bullets."
         )
-    return (
+        return prefix + body
+    body = (
         f"The user is viewing a 3D scene described as: {scene_prompt.strip()}\n\n"
         f"They selected this object: {obj.label} (asset type: {obj.kind}, USD prim: {obj.prim_name}).\n\n"
         "Write exactly 3 to 5 short educational blurbs. Each blurb is one or two sentences. "
@@ -96,6 +106,7 @@ def _build_explain_prompt(scene_prompt: str, obj: SceneObject, compact: bool) ->
         "If it is furniture or architecture, describe its typical role in this kind of scene.\n\n"
         "Format: one blurb per line, no numbering, no bullet characters, no markdown."
     )
+    return prefix + body
 
 
 def _is_connection_refused(exc: BaseException) -> bool:
@@ -260,10 +271,23 @@ def explain_object_in_scene(
     model = _resolve_ollama_model(_explain_model_name())
     installed = ", ".join(_list_installed_ollama_models()) or "(could not list models)"
 
+    rag_context = ""
+    try:
+        from sceneforge.rag import rag_globally_disabled, retrieved_context_block
+
+        if not rag_globally_disabled():
+            rag_context = retrieved_context_block(
+                f"{scene_prompt}\nObject to explain: {obj.label} ({obj.kind})."
+            )
+    except Exception:
+        rag_context = ""
+
     def _payload(compact: bool, options: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         p: Dict[str, Any] = {
             "model": model,
-            "prompt": _build_explain_prompt(scene_prompt, obj, compact=compact),
+            "prompt": _build_explain_prompt(
+                scene_prompt, obj, compact=compact, rag_context=rag_context
+            ),
             "stream": False,
         }
         if options:

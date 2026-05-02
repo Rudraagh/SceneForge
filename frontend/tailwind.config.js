@@ -89,6 +89,15 @@ export default {
           "0%, 100%": { opacity: "0.45" },
           "50%": { opacity: "0.9" },
         },
+        dreamFloat: {
+          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1)" },
+          "50%": { transform: "translate3d(0, -28px, 0) scale(1.05)" },
+        },
+        dreamDrift: {
+          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg)" },
+          "33%": { transform: "translate3d(16px, -12px, 0) rotate(4deg)" },
+          "66%": { transform: "translate3d(-12px, 18px, 0) rotate(-3deg)" },
+        },
       },
       accentColor: {
         neon: "#e8ff3d",
@@ -108,6 +117,8 @@ export default {
         conicSpin: "conicSpin 100s linear infinite",
         videoBloom: "videoBloom 22s ease-in-out infinite",
         ringPulse: "ringPulse 12s ease-in-out infinite",
+        dreamFloat: "dreamFloat 22s ease-in-out infinite",
+        dreamDrift: "dreamDrift 28s ease-in-out infinite",
       },
     },
   },

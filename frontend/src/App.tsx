@@ -259,7 +259,12 @@ export default function App() {
         Skip to studio
       </a>
 
-      <header className="sticky top-0 z-40 border-b border-ink/10 bg-canvas/75 backdrop-blur-xl">
+      <header
+        className="sticky top-0 z-40 border-b border-[rgba(100,120,170,0.22)] backdrop-blur-xl"
+        style={{
+          background: "linear-gradient(92deg, rgba(232, 242, 255, 0.72) 0%, rgba(246, 236, 252, 0.68) 55%, rgba(228, 236, 252, 0.74) 100%)",
+        }}
+      >
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-3 motion-safe:animate-fadeInDown sm:flex-row sm:items-center sm:justify-between md:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-ink/15 bg-white font-display text-sm font-bold tracking-tight text-ink shadow-sm motion-safe:animate-scaleIn">
@@ -361,7 +366,7 @@ export default function App() {
       <QuickStartSection />
       <WorkflowSection />
 
-      <section id="studio" className="scroll-mt-24 border-b border-ink/10 py-10 sm:py-12">
+      <section id="studio" className="sf-studio-glass scroll-mt-24 py-10 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="flex flex-col gap-2 motion-safe:animate-fadeInUp sm:flex-row sm:items-end sm:justify-between">
             <div>
