@@ -20,11 +20,15 @@ The single-page marketing experience (hero through workflow) lives in `frontend/
 
 - Convert a prompt like `"a medieval classroom with wooden desks and a blackboard"` into a structured scene graph
 - Use a local Ollama model for JSON scene generation
+- Retry local LLM generation with stricter compact JSON prompts and prompt-aware reasoning hints
 - Fall back to deterministic scene templates when AI output is invalid or unavailable
+- Backfill sparse AI scenes from the user prompt itself so generic prompts do not collapse to one object
 - Parse a color-coded `blueprint.png` and map it into world-space placement
+- Apply prompt-aware blueprint reinterpretation for ambiguous regions in strict blueprint mode
 - Run a refinement loop over blueprint scenes to improve spacing and relational consistency
 - Extract simple object relationships from prompt text such as `on`, `beside`, and `near`
 - Infer a few special-case relations such as solar-system orbital relations
+- Clean up AI placement with family-specific layouts plus a generic semantic layout pass for arbitrary prompts
 - Resolve assets from:
   - cached normalized assets
   - Objaverse candidates
@@ -49,8 +53,9 @@ The high-level flow is:
    - local LLM output via `ai_scene_graph.py`, or
    - deterministic templates and constraints
 4. If blueprint mode is on and the scene is not a deterministic **solar system**, `blueprint.png` is parsed and either **replaces** the scene (strict mode with regions) or **merges** positions—this applies to **both AI and rule** paths in `direct_usd_scene.build_scene_from_prompt()`.
+   - Strict blueprint parsing can reinterpret ambiguous detections from prompt semantics, for example mapping board-like regions to bookshelves for `library` prompts.
 5. Prompt relations are extracted or inferred.
-6. The graph is arranged and optionally refined by layout and agent loops (skipped in deterministic / rule mode except blueprint placement above).
+6. The graph is arranged and optionally refined by layout and agent loops, including classroom / throne-room / solar-system special cases and a generic semantic arranger for other prompts.
 7. `objaverse_loader.py` resolves the best available asset for each object.
 8. USD prims are authored, transformed, scaled, and exported.
 9. `main.py` optionally flattens the scene and launches `view_generated_scene.py`.
@@ -63,6 +68,8 @@ This repo is not a web research system, but it does have several retrieval-style
   - builds few-shot prompts from `scene_dataset.json`
   - queries a local Ollama model
   - normalizes and constrains model output
+  - retries failed generations with compact JSON-only prompts and stronger internal layout instructions
+  - augments sparse AI scenes using prompt-derived object expectations
   - falls back safely when the model returns bad JSON or poor structure
 
 - `objaverse_loader.py`
@@ -76,6 +83,7 @@ This repo is not a web research system, but it does have several retrieval-style
   - reads a simple blueprint image
   - identifies colored object regions
   - classifies them by nearest palette color
+  - applies prompt-aware overrides for ambiguous blueprint detections
 
 - `relations.py` and `relation_infer.py`
   - recover lightweight semantic relations from prompt text
@@ -95,6 +103,8 @@ In practice, the project "researches" a scene by combining local LLM reasoning, 
 - `tavern`
 - `solar_system`
 - `studio` fallback
+
+Prompt-only scenes outside the fixed families now use a generic prompt-driven object extractor and semantic layout pass instead of relying only on canned templates.
 
 Rule mode uses a fixed template per type (for example **courtyard** uses benches, pine trees, and a central **barrel** as a stand-in where no dedicated fountain mesh exists in the canonical library).
 
@@ -193,16 +203,19 @@ Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, `stall`, **`founta
   - builds Ollama prompts
   - extracts JSON from model output
   - constrains coordinates and spacing
+  - retries invalid LLM responses with compact stricter prompts
+  - completes sparse scenes from prompt nouns when the AI under-specifies the scene
   - provides deterministic scene templates
   - scores layout quality
   - builds graph structures with nodes, edges, and lookup tables
   - includes a training stub for future fine-tuning
 
 - `layout_engine.py`
-  - graph-only layout helper focused on classroom-style layouts
+  - graph-only layout helper for family-specific and generic scenes
   - arranges desks into a grid
-  - places chairs relative to desks
-  - places boards at the front
+  - centers throne-room ceremonial compositions
+  - arranges solar systems into concentric orbital layouts
+  - runs a generic semantic layout cleanup pass for arbitrary prompts
   - stores room dimensions in graph metadata
   - adds `near` relationship edges between chairs and desks
 
@@ -226,6 +239,7 @@ Synonyms such as `desk`, `board`, `bookcase`, `tree`, `fire`, `stall`, **`founta
   - reads `blueprint.png`
   - flood-fills colored regions
   - matches region colors to known object classes
+  - can reinterpret ambiguous detections from prompt semantics in strict blueprint mode
   - returns normalized object positions
 
 - `blueprint_mapper.py`
@@ -583,7 +597,7 @@ If you want better blueprint coverage, expand `DEFAULT_COLOR_MAP` and reduce the
 ## Current Limitations
 
 - `main.py` always runs `direct_usd_scene.py`; the Omniverse path is available but not the default
-- `layout_engine.py` is classroom-biased even though other scene families exist
+- `layout_engine.py` still uses lightweight heuristics rather than full physical or semantic simulation
 - relation extraction is intentionally shallow and only supports a few patterns
 - blueprint parsing is color-and-region based, not learned or geometry-aware
 - Objaverse retrieval only works when the package and local setup are available

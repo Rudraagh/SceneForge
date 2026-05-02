@@ -79,6 +79,7 @@ def parse_blueprint(
                 }
             )
 
+    objects = _apply_prompt_object_overrides(objects, prompt)
     objects.sort(key=lambda item: (item["y"], item["x"], item["name"]))
     return objects
 
@@ -89,6 +90,19 @@ def parse_blueprint_or_empty(
     color_map: Optional[Dict[str, Tuple[int, int, int]]] = None,
 ) -> List[Dict]:
     return parse_blueprint(image_path=image_path, prompt=prompt, color_map=color_map)
+
+
+def _apply_prompt_object_overrides(objects: List[Dict], prompt: str) -> List[Dict]:
+    text = (prompt or "").lower()
+    if any(token in text for token in ("library", "reading room", "book room")):
+        remapped: List[Dict] = []
+        for item in objects:
+            updated = dict(item)
+            if updated.get("name") == "blackboard":
+                updated["name"] = "bookshelf"
+            remapped.append(updated)
+        return remapped
+    return objects
 
 
 def _is_background(color: Tuple[int, int, int]) -> bool:
