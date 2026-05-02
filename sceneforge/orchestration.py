@@ -83,6 +83,9 @@ def canonicalize_object_name(name: str) -> str:
         "king_chair": "throne",
         "sol": "sun",
         "water_feature": "fountain",
+        "exit": "door",
+        "doorway": "door",
+        "egress": "door",
     }
     return synonyms.get(key, key)
 

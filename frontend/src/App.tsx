@@ -35,7 +35,16 @@ import {
   WorkflowSection,
 } from "./components/SiteMarketing";
 
+/** Matches blueprint_parser.DEFAULT_COLOR_MAP so the plot reads like the PNG legend. */
 function markerColor(kind: string): string {
+  const k = kind.toLowerCase();
+  if (k.startsWith("wooden_desk")) return "#A0522D";
+  if (k.startsWith("blackboard")) return "#228B22";
+  if (k.startsWith("bookshelf")) return "#8B4513";
+  if (k.startsWith("table")) return "#B5651D";
+  if (k.startsWith("chair") || k.startsWith("bench")) return "#4169E1";
+  if (k.startsWith("lamp")) return "#FFD700";
+  if (k.startsWith("door")) return "#3C3C48";
   let h = 0;
   for (let i = 0; i < kind.length; i++) h = (h * 31 + kind.charCodeAt(i)) >>> 0;
   return `hsl(${h % 360} 65% 52%)`;
@@ -128,6 +137,7 @@ export default function App() {
         mode,
         use_blueprint: useBlueprint,
         blueprint_base64,
+        blueprint_filename: useBlueprint && blueprintFile ? blueprintFile.name : undefined,
         output_path: outputPath.trim(),
         prefer_local_assets: preferLocal,
         disable_cache: disCache,
@@ -163,7 +173,7 @@ export default function App() {
     const xs = objects.map((o) => o.position[0]);
     const ys = objects.map((o) => o.position[1]);
     const zs = objects.map((o) => o.position[2]);
-    const text = objects.map((o) => o.prim_name);
+    const text = objects.map((o) => `${o.label} (${o.prim_name})`);
     const colors = objects.map((o) => markerColor(o.kind));
     const customdata = objects.map((o) => o.prim_path);
     return {
@@ -195,9 +205,18 @@ export default function App() {
         autosize: true,
         scene: {
           bgcolor: "rgba(255,255,255,0.92)",
-          xaxis: { title: "X", gridcolor: "rgba(0,0,0,0.08)", color: "#525252" },
-          yaxis: { title: "Y", gridcolor: "rgba(0,0,0,0.08)", color: "#525252" },
-          zaxis: { title: "Z", gridcolor: "rgba(0,0,0,0.08)", color: "#525252" },
+          xaxis: {
+            title: "X (blueprint left = −X)",
+            gridcolor: "rgba(0,0,0,0.08)",
+            color: "#525252",
+            autorange: "reversed" as const,
+          },
+          yaxis: { title: "Y (up)", gridcolor: "rgba(0,0,0,0.08)", color: "#525252" },
+          zaxis: {
+            title: "Z (depth, blueprint ↑ → +Z)",
+            gridcolor: "rgba(0,0,0,0.08)",
+            color: "#525252",
+          },
           aspectmode: "data" as const,
         },
         showlegend: false,
@@ -618,6 +637,20 @@ export default function App() {
                       </>
                     )}
                   </div>
+
+                  {result.warnings && result.warnings.length > 0 ? (
+                    <div
+                      role="status"
+                      className="rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm"
+                    >
+                      <p className="font-medium text-amber-900">Blueprint checks</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-950/90">
+                        {result.warnings.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
 
                   {result.explanation_lines.length > 0 && (
                     <section className="rounded-3xl border border-ink/10 bg-white/60 p-5 shadow-sm backdrop-blur-sm">

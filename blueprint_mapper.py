@@ -1,3 +1,13 @@
+"""
+Map blueprint PNG centroids to USD scene positions.
+
+Blueprint parser uses image coordinates with origin at the top-left (``y`` grows
+downward). We map ``y`` to world ``Z`` with **image top toward +Z** so north /
+``+Z`` matches common top-of-map reading. Stage up-axis remains ``Y``; lamps get
+a small **Y** offset so strict blueprint mode reads as overhead fixtures in 3D
+previews, not as floor markers.
+"""
+
 from __future__ import annotations
 
 from typing import Dict, List, Tuple
@@ -7,6 +17,8 @@ from ai_scene_graph import canonicalize_object_name
 
 DEFAULT_WORLD_WIDTH = 12.0
 DEFAULT_WORLD_DEPTH = 12.0
+# World Y (up) for lamp prims when placed from a 2D floor/ceiling plan blob.
+LAMP_BLUEPRINT_Y_OFFSET = 2.75
 
 
 def normalized_to_world(
@@ -18,7 +30,8 @@ def normalized_to_world(
     clamped_x = max(0.0, min(1.0, float(normalized_x)))
     clamped_y = max(0.0, min(1.0, float(normalized_y)))
     world_x = (clamped_x - 0.5) * world_width
-    world_z = (clamped_y - 0.5) * world_depth
+    # Image top (small normalized y) -> +Z (depth / "north" on typical map orientation).
+    world_z = (0.5 - clamped_y) * world_depth
     return world_x, world_z
 
 
@@ -55,10 +68,12 @@ def map_blueprint_to_scene(
             world_width=world_width,
             world_depth=world_depth,
         )
+        base = name.lower()
+        world_y = float(LAMP_BLUEPRINT_Y_OFFSET) if base.startswith("lamp") else 0.0
         scene_objects.append(
             {
                 "name": name,
-                "position": [round(world_x, 3), 0.0, round(world_z, 3)],
+                "position": [round(world_x, 3), round(world_y, 3), round(world_z, 3)],
                 "rotation": [0.0, 0.0, 0.0],
                 "scale": [1.0, 1.0, 1.0],
             }

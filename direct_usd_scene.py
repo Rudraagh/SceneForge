@@ -46,6 +46,7 @@ OBJECT_SCALE_MAP = {
     "blackboard": 2.0,
     "bookshelf": 1.0,
     "lamp": 1.0,
+    "door": 0.35,
     "clock": 1.0,
     "bench": 0.55,
     "pine_tree": 0.35,
@@ -58,6 +59,7 @@ OBJECT_TARGET_SIZE_MAP = {
     "blackboard": [2.2, 1.2, 0.12],
     "bookshelf": [1.2, 1.8, 0.45],
     "lamp": [0.45, 1.2, 0.45],
+    "door": [1.0, 2.05, 0.12],
     "clock": [1.2, 1.2, 0.2],
     "bench": [1.8, 0.55, 0.65],
     "pine_tree": [1.2, 3.5, 1.2],
@@ -153,6 +155,8 @@ def create_placeholder_geometry(stage: Usd.Stage, prim_path: str, object_name: s
     lower = object_name.lower()
     if any(key in lower for key in ("desk", "table", "bench", "crate", "barrel")):
         color = Gf.Vec3f(0.45, 0.28, 0.12)
+    elif "door" in lower:
+        color = Gf.Vec3f(0.22, 0.22, 0.28)
     elif any(key in lower for key in ("chair", "banner")):
         color = Gf.Vec3f(0.2, 0.35, 0.75)
     elif any(key in lower for key in ("tree", "campfire", "board", "planet", "sun", "earth", "mars", "venus", "mercury", "jupiter", "saturn", "uranus", "neptune")):

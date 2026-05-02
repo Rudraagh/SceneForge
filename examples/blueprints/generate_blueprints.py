@@ -22,6 +22,7 @@ CHAIR = (65, 105, 225)
 BOARD = (34, 139, 34)
 SHELF = (139, 69, 19)
 LAMP = (255, 215, 0)
+DOOR = (60, 60, 72)
 WHITE = (255, 255, 255)
 
 W, H = 720, 540
@@ -51,9 +52,11 @@ def gen_b1_studio() -> None:
 
 
 def gen_b2_home_two_rooms() -> None:
-    """Left = living (desk/chair), right = kitchen (table/chair, board, shelf)."""
+    """Left = living (board strip, desk, chairs); right = kitchen (table, chair, board, shelf)."""
     img, d = _new()
     mid = W // 2
+    # Green “board” zone in living (matches prompt: green area per room).
+    d.rectangle([50, 45, 300, 78], fill=BOARD)
     d.rectangle([50, 80, 300, 240], fill=DESK)
     d.rectangle([60, 260, 130, 330], fill=CHAIR)
     d.rectangle([160, 260, 230, 330], fill=CHAIR)
@@ -65,7 +68,7 @@ def gen_b2_home_two_rooms() -> None:
 
 
 def gen_b3_lecture_hall() -> None:
-    """Wide green board band at top, desk rows, lamp corners."""
+    """Wide green board band at top, desk rows, lamp corners, rear exit door strip."""
     img, d = _new()
     d.rectangle([30, 25, W - 30, 95], fill=BOARD)
     for row, y in enumerate([140, 220, 300]):
@@ -76,6 +79,8 @@ def gen_b3_lecture_hall() -> None:
             d.rectangle([dx + 78, y + 10, dx + 108, y + 50], fill=CHAIR)
     d.rectangle([30, H - 90, 100, H - 35], fill=LAMP)
     d.rectangle([W - 100, H - 90, W - 35, H - 35], fill=LAMP)
+    # Rear exit (legend: door) — bottom center of plan.
+    d.rectangle([W // 2 - 48, H - 52, W // 2 + 48, H - 22], fill=DOOR)
     _save(img, "blueprint_b03_lecture_hall.png")
 
 
@@ -116,13 +121,14 @@ def gen_b6_library() -> None:
 
 
 def gen_b7_gallery() -> None:
-    """East/west wall strips + aisle desks + bench chairs."""
+    """East/west wall strips + aisle desk band + bench chairs centered in aisle."""
     img, d = _new()
     d.rectangle([W - 80, 40, W - 25, H - 40], fill=BOARD)
     d.rectangle([25, 40, 80, H - 40], fill=BOARD)
     d.rectangle([200, 100, 520, 200], fill=DESK)
-    d.rectangle([220, 220, 290, 280], fill=CHAIR)
-    d.rectangle([360, 220, 430, 280], fill=CHAIR)
+    # Blue bench blobs on the brown aisle midline (same X band as desk).
+    d.rectangle([310, 130, 350, 185], fill=CHAIR)
+    d.rectangle([370, 130, 410, 185], fill=CHAIR)
     d.rectangle([280, 40, 340, 90], fill=LAMP)
     d.rectangle([420, 40, 480, 90], fill=LAMP)
     _save(img, "blueprint_b07_gallery.png")

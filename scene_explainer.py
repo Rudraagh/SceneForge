@@ -73,7 +73,17 @@ def _object_kind_from_prim_name(prim_name: str) -> str:
     return prim_name
 
 
+_KIND_LABELS = {
+    "blackboard": "Board zone (green on blueprint)",
+    "door": "Door / exit zone",
+    "wooden_desk": "Desk zone",
+    "table": "Table zone",
+}
+
+
 def _humanize_kind(kind: str) -> str:
+    if kind in _KIND_LABELS:
+        return _KIND_LABELS[kind]
     return kind.replace("_", " ").strip().title()
 
 

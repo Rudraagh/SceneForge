@@ -64,6 +64,21 @@ def score_badge(score: float) -> str:
 
 
 def _marker_color_for_kind(kind: str) -> str:
+    k = kind.lower()
+    if k.startswith("wooden_desk"):
+        return "#A0522D"
+    if k.startswith("blackboard"):
+        return "#228B22"
+    if k.startswith("bookshelf"):
+        return "#8B4513"
+    if k.startswith("table"):
+        return "#B5651D"
+    if k.startswith("chair") or k.startswith("bench"):
+        return "#4169E1"
+    if k.startswith("lamp"):
+        return "#FFD700"
+    if k.startswith("door"):
+        return "#3C3C48"
     hue = abs(hash(kind)) % 360
     return f"hsl({hue}, 65%, 52%)"
 
@@ -72,7 +87,7 @@ def _build_scene_scatter_figure(objects: list[SceneObject]) -> go.Figure:
     xs = [o.position[0] for o in objects]
     ys = [o.position[1] for o in objects]
     zs = [o.position[2] for o in objects]
-    labels = [o.prim_name for o in objects]
+    labels = [f"{o.label} ({o.prim_name})" for o in objects]
     colors = [_marker_color_for_kind(o.kind) for o in objects]
     custom_paths = [o.prim_path for o in objects]
 
@@ -94,9 +109,9 @@ def _build_scene_scatter_figure(objects: list[SceneObject]) -> go.Figure:
     fig.update_layout(
         title=dict(text="Scene objects — click a point to select it", font=dict(size=14)),
         scene=dict(
-            xaxis_title="X",
-            yaxis_title="Y",
-            zaxis_title="Z",
+            xaxis=dict(title="X (blueprint left = −X)", autorange="reversed"),
+            yaxis=dict(title="Y (up)"),
+            zaxis=dict(title="Z (depth, blueprint ↑ → +Z)"),
             aspectmode="data",
         ),
         margin=dict(l=0, r=0, t=40, b=0),
@@ -214,6 +229,22 @@ if run_btn:
         st.session_state[LAST_PROMPT_KEY] = prompt.strip()
         st.session_state[PIPELINE_PYTHON_KEY] = pipeline_python
 
+        bp_warnings: list[str] = []
+        if use_blueprint and os.path.exists(BLUEPRINT_PATH):
+            from blueprint_parser import parse_blueprint_or_empty
+            from sceneforge.blueprint_warnings import collect_blueprint_warnings
+
+            regions = parse_blueprint_or_empty(BLUEPRINT_PATH, prompt.strip())
+            bp_name = uploaded_file.name if uploaded_file is not None else "blueprint.png"
+            bp_warnings = collect_blueprint_warnings(
+                prompt=prompt.strip(),
+                mode=mode,
+                use_blueprint=use_blueprint,
+                blueprint_filename=bp_name,
+                blueprint_region_count=len(regions),
+            )
+        st.session_state["sf_blueprint_warnings"] = bp_warnings
+
         if return_code == 0:
             st.success("Scene generated successfully")
         else:
@@ -243,6 +274,12 @@ if logs:
         st.write(f"**Pipeline Python:** `{st.session_state.get(PIPELINE_PYTHON_KEY, resolve_pipeline_python())}`")
         st.write(f"**Blueprint file:** `{BLUEPRINT_PATH}`")
         st.write(f"**USD exists:** {'Yes' if os.path.exists(usd_path) else 'No'}")
+
+    bp_warn = st.session_state.get("sf_blueprint_warnings") or []
+    if bp_warn:
+        st.subheader("Blueprint checks")
+        for line in bp_warn:
+            st.warning(line)
 
     if metrics:
         st.subheader("Metrics")

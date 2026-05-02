@@ -28,6 +28,7 @@ _REGISTRY: Dict[str, AssetDescriptor] = {
     "blackboard": AssetDescriptor("blackboard", ("board", "chalkboard"), ("blackboard", "board"), ("local", "objaverse", "procedural")),
     "bookshelf": AssetDescriptor("bookshelf", ("bookshelf", "bookcase", "shelf"), ("bookshelf", "shelf"), ("local", "objaverse", "procedural")),
     "lamp": AssetDescriptor("lamp", ("lamp", "lantern"), ("lamp", "lantern"), ("local", "free", "objaverse", "procedural")),
+    "door": AssetDescriptor("door", ("door", "exit", "doorway"), ("door", "gate"), ("local", "objaverse", "procedural")),
     "barrel": AssetDescriptor("barrel", ("barrel",), ("barrel",), ("local", "objaverse", "procedural")),
     "fountain": AssetDescriptor("fountain", ("fountain", "water_feature"), ("fountain", "decor"), ("procedural", "local")),
 }

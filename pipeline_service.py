@@ -139,9 +139,12 @@ def resolve_output_path_from_options(options: Dict[str, Any]) -> str:
 
 
 def save_blueprint_bytes(data: bytes) -> None:
-    Path(BLUEPRINT_PATH).parent.mkdir(parents=True, exist_ok=True)
-    with open(BLUEPRINT_PATH, "wb") as handle:
-        handle.write(data)
+    """Write blueprint atomically so the pipeline never reads a half-written PNG."""
+    dest = Path(BLUEPRINT_PATH)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    tmp.write_bytes(data)
+    os.replace(str(tmp), str(dest))
 
 
 def open_in_blender(path: str) -> str:

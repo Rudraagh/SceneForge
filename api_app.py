@@ -51,6 +51,8 @@ class GenerateRequest(BaseModel):
     use_blueprint: bool = False
     """If set, decode and save as blueprint.png before running (raw base64 or data URL)."""
     blueprint_base64: Optional[str] = None
+    """Original client filename (e.g. File.name) for prompt↔blueprint sanity checks."""
+    blueprint_filename: Optional[str] = None
     output_path: str = ""
     prefer_local_assets: bool = True
     disable_cache: bool = False
@@ -112,7 +114,9 @@ def _save_blueprint_from_payload(data: GenerateRequest) -> bool:
 
 @app.post("/api/generate")
 def generate(data: GenerateRequest) -> Dict[str, Any]:
+    from blueprint_parser import parse_blueprint_or_empty
     from pipeline_service import USD_PATH
+    from sceneforge.blueprint_warnings import collect_blueprint_warnings
 
     saved_blueprint = _save_blueprint_from_payload(data)
 
@@ -134,6 +138,19 @@ def generate(data: GenerateRequest) -> Dict[str, Any]:
         raise HTTPException(
             status_code=400,
             detail="Blueprint mode is on. Send blueprint_base64 with this request or turn blueprint mode off.",
+        )
+
+    warnings_list: List[str] = []
+    if data.use_blueprint and saved_blueprint:
+        regions = parse_blueprint_or_empty(BLUEPRINT_PATH, data.prompt.strip())
+        warnings_list.extend(
+            collect_blueprint_warnings(
+                prompt=data.prompt.strip(),
+                mode=opts["mode"],
+                use_blueprint=True,
+                blueprint_filename=(data.blueprint_filename or "").strip() or None,
+                blueprint_region_count=len(regions),
+            )
         )
 
     logs, code, py = run_pipeline(data.prompt.strip(), opts)
@@ -170,6 +187,7 @@ def generate(data: GenerateRequest) -> Dict[str, Any]:
         "temp_dir": workspace_temp_dir(),
         "objects": objects,
         "objects_error": objects_error,
+        "warnings": warnings_list,
     }
 
 

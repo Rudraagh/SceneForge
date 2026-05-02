@@ -952,6 +952,12 @@ def generate_procedural_proxy_asset(name: str) -> Optional[Dict[str, object]]:
         mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 1.0, 0.0))
         mesh.AddScaleOp().Set(Gf.Vec3f(1.8, 2.0, 0.28))
         size = [1.8, 2.0, 0.28]
+    elif "door" in lower:
+        mesh = UsdGeom.Cube.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
+        mesh.CreateSizeAttr(1.0)
+        mesh.AddTranslateOp().Set(Gf.Vec3f(0.0, 1.02, 0.0))
+        mesh.AddScaleOp().Set(Gf.Vec3f(1.0, 2.04, 0.12))
+        size = [1.0, 2.04, 0.12]
     elif any(key in lower for key in ("noodle", "rope", "vine")):
         mesh = UsdGeom.Cylinder.Define(stage, f"/Root/{object_name.title().replace('_', '')}")
         mesh.CreateRadiusAttr(0.16)

@@ -5,6 +5,8 @@ export type GeneratePayload = {
   mode: "ai" | "rule";
   use_blueprint: boolean;
   blueprint_base64?: string | null;
+  /** Sent with uploads so the API can warn when prompt and filename disagree. */
+  blueprint_filename?: string | null;
   output_path: string;
   prefer_local_assets: boolean;
   disable_cache: boolean;
@@ -33,6 +35,7 @@ export type GenerateResponse = {
   temp_dir: string;
   objects?: SceneObjectDTO[];
   objects_error?: string | null;
+  warnings?: string[];
 };
 
 export async function postGenerate(body: GeneratePayload): Promise<GenerateResponse> {

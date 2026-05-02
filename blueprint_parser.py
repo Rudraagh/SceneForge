@@ -16,6 +16,8 @@ DEFAULT_COLOR_MAP = {
     "blackboard": (34, 139, 34),
     "bookshelf": (139, 69, 19),
     "lamp": (255, 215, 0),
+    # Dark slate — distinct from chair blue and desk browns; use for exits/doors on plans.
+    "door": (60, 60, 72),
 }
 BACKGROUND_THRESHOLD = 235
 MIN_REGION_PIXELS = 20
